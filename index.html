@@ -387,8 +387,10 @@ function isBlocked(x,z){
   if(!islandDestinations.some(d=>Math.hypot(x-d.x,z-d.z)<d.r-PLAYER_RADIUS))return true;
   // El macizo bloquea el paso salvo en la franja transitable del sendero.
   const mx=x,mz=z+23.2,inside=(mx*mx)/(12.8*12.8)+(mz*mz)/(11.2*11.2)<1.08;
-  if(inside&&mountainPathInfo(x,z).distance>2.05)return true;
-  for(const c of worldColliders){if(c.obj&&!c.obj.visible)continue;if(Math.hypot(x-c.x,z-c.z)<c.r+PLAYER_RADIUS)return true;}
+  const onMountainTrail=mountainPathInfo(x,z).distance<2.05;
+  if(inside&&!onMountainTrail)return true;
+  // Mantener el sendero despejado aunque cruce la franja de árboles exterior.
+  if(!onMountainTrail)for(const c of worldColliders){if(c.obj&&!c.obj.visible)continue;if(Math.hypot(x-c.x,z-c.z)<c.r+PLAYER_RADIUS)return true;}
   for(const w of buildingWalls){if(Math.abs(x-w.x)<w.hx+PLAYER_RADIUS && Math.abs(z-w.z)<w.hz+PLAYER_RADIUS)return true;}
   return false;
 }
