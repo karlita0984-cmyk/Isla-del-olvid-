@@ -173,6 +173,12 @@ for(const d of islandDestinations.slice(1)){
  islandGrounds.push({x:d.x,z:d.z,r:d.r});
 }
 [[-8,-6],[-10,0],[-7,7],[7,-7],[10,-1],[7,7],[0,-10],[12,4],[-12,4]].forEach((p,i)=>tree(p[0],p[1],.8+(i%3)*.13));
+// Árbol de copa redondeada inspirado en el boceto del cuaderno.
+const sketchTree=new THREE.Group();
+const sketchTrunk=new THREE.Mesh(new THREE.CylinderGeometry(.2,.34,2.55,9),wood);sketchTrunk.position.set(0,1.28,0);sketchTrunk.rotation.z=-.09;sketchTrunk.castShadow=true;sketchTrunk.receiveShadow=true;sketchTree.add(sketchTrunk);
+const sketchCrown=new THREE.Mesh(new THREE.SphereGeometry(1,18,14),leaf2);sketchCrown.position.set(.12,2.55,0);sketchCrown.scale.set(1.25,.9,1.05);sketchCrown.castShadow=true;sketchCrown.receiveShadow=true;sketchTree.add(sketchCrown);
+const sketchCrownSide=new THREE.Mesh(new THREE.SphereGeometry(.62,14,10),leaf);sketchCrownSide.position.set(-.62,2.28,.02);sketchCrownSide.scale.set(1,.9,.9);sketchCrownSide.castShadow=true;sketchTree.add(sketchCrownSide);
+sketchTree.position.set(14,.5,-10);scene.add(sketchTree);worldColliders.push({x:14,z:-10,r:1.05});swayObjects.push({obj:sketchTree,amp:.022,speed:1.05});
 [[-5,-2],[5,-4],[9,5],[-9,5],[2,10]].forEach(p=>rock(...p));
 // Vegetación y fauna de la primera isla
 const animalAnimations=[],parrotAnimations=[],fishAnimations=[];
