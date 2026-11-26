@@ -355,6 +355,8 @@ const skinMat=mat(0xc98d63),hairMat=mat(0x302018),hairHi=mat(0x493022),
  shirtMat=mat(0x9aa5a3),pantsMat=mat(0x596b59),pantsDark=mat(0x3e5145),
  bootMat=mat(0x392b22),bootLight=mat(0x604532),strapMat=mat(0x523927),
  zipMat=mat(0xd7c28d),eyeMat=mat(0x201915),whiteMat=mat(0xf4eee2);
+// Alias de compatibilidad: evita fallos si alguna parte del modelo antiguo solicita 'skin'.
+const skin=skinMat;
 function alexPart(parent,geo,material,x,y,z,sx=1,sy=1,sz=1){
  const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);
  m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
