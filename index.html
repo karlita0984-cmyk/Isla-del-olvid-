@@ -108,8 +108,10 @@ function startIDO(){
  try{
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x55c9f2);scene.fog=new THREE.Fog(0x8bdcf0,88,230);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,280);
-const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('game'),antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.85));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0x55c9f2);
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('game'),antialias:false,powerPreference:'low-power'});
+// Perfil compatible con Safari en iPad: menos carga de GPU y sin sombras dinámicas pesadas.
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0x55c9f2);
+const gameCanvas=renderer.domElement;gameCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();loadmsg.textContent='Safari perdió el contexto gráfico. Cierra otras pestañas y vuelve a abrir el juego.';loading.style.display='grid';});
 scene.add(new THREE.HemisphereLight(0xd9f5ff,0x385b35,2.8));
 scene.fog=new THREE.FogExp2(0x9bdde8,.0028);
 const sun=new THREE.DirectionalLight(0xfff0c2,3.0);sun.position.set(-18,30,12);sun.castShadow=true;sun.shadow.mapSize.set(4096,4096);sun.shadow.camera.left=-52;sun.shadow.camera.right=52;sun.shadow.camera.top=52;sun.shadow.camera.bottom=-52;sun.shadow.bias=-0.00025;sun.shadow.normalBias=.025;scene.add(sun);
