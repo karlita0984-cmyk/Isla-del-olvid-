@@ -282,13 +282,19 @@ let hasAncientStone=false,dungeonOpen=false;
 const runeStoneMat=new THREE.MeshStandardMaterial({color:0x7c8b88,roughness:.72,metalness:.12,emissive:0x163d3b,emissiveIntensity:.22});
 const runeStone=new THREE.Group();
 const runeCore=new THREE.Mesh(new THREE.DodecahedronGeometry(.62,1),runeStoneMat);runeCore.scale.set(.82,1.18,.68);runeCore.position.y=.86;runeCore.castShadow=true;runeStone.add(runeCore);
-const runeMark=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,7,24),new THREE.MeshStandardMaterial({color:0x8fe6d4,emissive:0x2c9f8e,emissiveIntensity:.8}));runeMark.position.set(0,1.02,.43);runeMark.rotation.x=.25;runeStone.add(runeMark);runeStone.position.set(9,.58,-10);scene.add(runeStone);
+const runeMark=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,7,24),new THREE.MeshStandardMaterial({color:0x8fe6d4,emissive:0x2c9f8e,emissiveIntensity:.8}));runeMark.position.set(0,1.02,.43);runeMark.rotation.x=.25;runeStone.add(runeMark);runeStone.position.set(9,.58,-10);scene.add(runeStone);const runeBeacon=new THREE.PointLight(0x59e4cf,1.25,9);runeBeacon.position.set(9,2.3,-10);scene.add(runeBeacon);
 // Pedestal y sello de piedra frente a la montaña principal.
 const altar=new THREE.Group();const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.22,.55,8),cliffDark);altarBase.position.y=.78;altarBase.castShadow=true;altar.add(altarBase);
 const altarTop=new THREE.Mesh(new THREE.CylinderGeometry(.78,.9,.18,8),stoneRidge);altarTop.position.y=1.12;altarTop.castShadow=true;altar.add(altarTop);
 const socket=new THREE.Mesh(new THREE.CylinderGeometry(.38,.46,.09,8),mat(0x263a3a));socket.position.y=1.25;altar.add(socket);altar.position.set(0,.55,-17.2);scene.add(altar);
 const seal=new THREE.Group();const sealMat=mat(0x394b4b);const sealBlock=new THREE.Mesh(new THREE.BoxGeometry(2.65,3.1,.62),sealMat);sealBlock.position.set(0,1.55,0);sealBlock.castShadow=true;seal.add(sealBlock);
 const sealRune=new THREE.Mesh(new THREE.TorusGeometry(.42,.085,8,28),new THREE.MeshStandardMaterial({color:0x63cfc1,emissive:0x1d8d7e,emissiveIntensity:.42}));sealRune.position.set(0,1.7,.34);seal.add(sealRune);seal.position.set(0,.58,-21.15);scene.add(seal);
+const dungeonMouth=new THREE.Group();
+const dungeonDark=new THREE.Mesh(new THREE.PlaneGeometry(2.5,2.9),new THREE.MeshBasicMaterial({color:0x03090d,side:THREE.DoubleSide,fog:false}));dungeonDark.position.set(0,2.02,0);dungeonMouth.add(dungeonDark);
+const dungeonArch=new THREE.Mesh(new THREE.TorusGeometry(1.48,.22,10,32,Math.PI),stoneRidge);dungeonArch.position.set(0,2.05,.08);dungeonMouth.add(dungeonArch);
+for(const side of [-1,1]){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.34,2.05,.42),cliffDark);pillar.position.set(side*1.48,1.03,.08);pillar.castShadow=true;dungeonMouth.add(pillar);}
+const lintel=new THREE.Mesh(new THREE.BoxGeometry(3.25,.34,.46),stoneRidge);lintel.position.set(0,3.02,.08);lintel.castShadow=true;dungeonMouth.add(lintel);
+dungeonMouth.position.set(0,.58,-21.52);dungeonMouth.visible=false;scene.add(dungeonMouth);
 const dungeonGlow=new THREE.PointLight(0x48d8bd,0,13);dungeonGlow.position.set(0,2.2,-22.2);scene.add(dungeonGlow);
 // Relieve nuevo: lomas suaves que rompen la apariencia plana del centro de la isla.
 const hillMat=mat(0x43894a),hillLight=mat(0x579b50);
@@ -327,45 +333,82 @@ fish(19,2,0xf3b84b);fish(-20,-4,0x55c6d8);fish(5,20,0xe97955);fish(-6,-20,0xf0d1
 const wreck=new THREE.Group();const hull=new THREE.Mesh(new THREE.BoxGeometry(4,.8,1.5),wood);hull.position.y=.9;hull.rotation.z=-.12;hull.castShadow=true;wreck.add(hull);const mast=new THREE.Mesh(new THREE.CylinderGeometry(.09,.13,4,8),wood);mast.position.set(0,2.9,0);mast.rotation.z=.12;wreck.add(mast);wreck.position.set(-10,.45,-7);wreck.rotation.y=.6;scene.add(wreck);worldColliders.push({x:-10,z:-7,r:2.15});
 // Alex Rivas: modelo de explorador juvenil, con ropa y accesorios unidos al esqueleto.
 const player=new THREE.Group();
-const skinMat=mat(0xc98d63),hairMat=mat(0x302018),jacketMat=mat(0x159f91),jacketLight=mat(0x31c1ae),shirtMat=mat(0x9aa5a3),pantsMat=mat(0x344b50),bootMat=mat(0x392b22),strapMat=mat(0x523927),zipMat=mat(0xd7c28d),eyeMat=mat(0x201915);
-function alexPart(parent,geo,material,x,y,z,sx=1,sy=1,sz=1){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
-const body=new THREE.Group();body.position.y=1;player.add(body);
-// Mochila y correas visibles desde atrás y los costados.
-alexPart(body,new THREE.CapsuleGeometry(.245,.36,5,10),strapMat,0,.02,-.31);
-alexPart(body,new THREE.SphereGeometry(.22,12,10),strapMat,0,.34,-.34,1,.52,.62);
-alexPart(body,new THREE.BoxGeometry(.10,.72,.065),strapMat,-.22,.02,.15);
-// Torso con chaqueta turquesa abierta y playera gris al centro.
-alexPart(body,new THREE.CapsuleGeometry(.34,.34,6,12),jacketMat,0,0,0,1.08,1,1.02);
-alexPart(body,new THREE.CapsuleGeometry(.145,.30,5,10),shirtMat,0,.02,.255,1,1,.20);
-alexPart(body,new THREE.CylinderGeometry(.012,.012,.62,8),zipMat,0,.02,.282);
-alexPart(body,new THREE.CapsuleGeometry(.095,.08,4,8),jacketLight,-.23,-.27,.255,1,1,.20);
-alexPart(body,new THREE.CapsuleGeometry(.095,.08,4,8),jacketLight,.23,-.27,.255,1,1,.20);
-alexPart(body,new THREE.BoxGeometry(.76,.13,.49),strapMat,0,-.43,.005);
-alexPart(body,new THREE.SphereGeometry(.055,8,6),zipMat,0,-.43,.275);
-// Cuello y cabeza joven, con flequillo castaño oscuro y rasgos limpios.
-alexPart(player,new THREE.CylinderGeometry(.12,.13,.16,10),skinMat,0,1.48,0);
-const head=new THREE.Group();head.position.set(0,1.76,.015);player.add(head);
-alexPart(head,new THREE.SphereGeometry(.30,18,14),skinMat,0,0,0,1,.98,.92);
-alexPart(head,new THREE.SphereGeometry(.315,20,16),hairMat,0,.145,-.045,1.02,.60,1.0);
-// Mechones separados para conservar la silueta despeinada del diseño de Alex.
-for(let i=0;i<5;i++){const a=-.95+i*.47;alexPart(head,new THREE.ConeGeometry(.105,.27,7),hairMat,Math.sin(a)*.22,.23,Math.cos(a)*.15,1,1,1).rotation.x=-.35;}
-alexPart(head,new THREE.SphereGeometry(.19,12,9),hairMat,0,.105,.205,1.02,.42,.55);
-for(const side of [-1,1]){alexPart(head,new THREE.SphereGeometry(.12,10,8),hairMat,side*.245,-.015,-.005,.72,1.3,.72);alexPart(head,new THREE.SphereGeometry(.028,8,6),eyeMat,side*.105,-.035,.267,1,1,.55);alexPart(head,new THREE.SphereGeometry(.035,8,6),hairMat,side*.10,.07,.265,1,.35,.4);}
-alexPart(head,new THREE.SphereGeometry(.034,8,6),skinMat,0,-.10,.286);
-alexPart(head,new THREE.BoxGeometry(.075,.012,.018),mat(0x754a3a),0,-.19,.255);
-// Brazos articulados con mangas turquesa, manos y piernas de explorador.
+const skinMat=mat(0xc98d63),hairMat=mat(0x302018),hairHi=mat(0x493022),
+ jacketMat=mat(0x159f91),jacketLight=mat(0x31c1ae),jacketDark=mat(0x08776f),
+ shirtMat=mat(0x9aa5a3),pantsMat=mat(0x596b59),pantsDark=mat(0x3e5145),
+ bootMat=mat(0x392b22),bootLight=mat(0x604532),strapMat=mat(0x523927),
+ zipMat=mat(0xd7c28d),eyeMat=mat(0x201915),whiteMat=mat(0xf4eee2);
+function alexPart(parent,geo,material,x,y,z,sx=1,sy=1,sz=1){
+ const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);
+ m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+const capsule=(r,len)=>new THREE.CapsuleGeometry(r,len,6,12);
+const torso=new THREE.Group();torso.position.y=1.02;player.add(torso);
+// Mochila de tela, bolsillo frontal y tirantes.
+alexPart(torso,new THREE.SphereGeometry(.285,18,14),strapMat,0,.06,-.34,1.05,1.15,.78);
+alexPart(torso,new THREE.SphereGeometry(.205,16,12),bootLight,0,-.12,-.49,1,.72,.42);
+alexPart(torso,new THREE.SphereGeometry(.20,14,10),strapMat,0,.29,-.40,1,.42,.65);
+for(const side of [-1,1]){
+ alexPart(torso,capsule(.043,.48),bootLight,side*.245,.02,-.12);
+ alexPart(torso,new THREE.SphereGeometry(.055,10,8),zipMat,side*.245,-.23,-.12,1,.7,.8);
+}
+// Camiseta gris y chaqueta turquesa con paneles delanteros y cuello.
+alexPart(torso,new THREE.SphereGeometry(.34,20,16),shirtMat,0,.02,.015,.92,1.22,.78);
+alexPart(torso,capsule(.19,.43),jacketMat,-.235,.015,.045,1.02,1.02,.92);
+alexPart(torso,capsule(.19,.43),jacketMat,.235,.015,.045,1.02,1.02,.92);
+alexPart(torso,new THREE.SphereGeometry(.105,12,10),jacketLight,-.255,.30,.12,1,.52,.65);
+alexPart(torso,new THREE.SphereGeometry(.105,12,10),jacketLight,.255,.30,.12,1,.52,.65);
+alexPart(torso,new THREE.CylinderGeometry(.012,.012,.55,8),zipMat,0,-.015,.315);
+for(let i=0;i<4;i++)alexPart(torso,new THREE.SphereGeometry(.018,8,6),zipMat,0,.20-i*.12,.325,1,1,.5);
+alexPart(player,new THREE.CylinderGeometry(.105,.12,.17,14),skinMat,0,1.48,.015);
+// Cabeza cartoon, rostro, orejas y cabello castaño despeinado.
+const head=new THREE.Group();head.position.set(0,1.79,.045);player.add(head);
+alexPart(head,new THREE.SphereGeometry(.305,28,22),skinMat,0,0,0,1,.99,.91);
+for(const side of [-1,1])alexPart(head,new THREE.SphereGeometry(.075,12,10),skinMat,side*.292,-.005,-.005,1,.95,.8);
+alexPart(head,new THREE.SphereGeometry(.315,22,16),hairMat,0,.155,-.045,1.04,.58,1);
+alexPart(head,new THREE.SphereGeometry(.205,18,12),hairMat,0,.105,.205,1,.45,.55);
+for(let i=0;i<7;i++){
+ const x=(i-3)*.075;
+ const tuft=alexPart(head,new THREE.ConeGeometry(.105,.24,7),i%2?hairMat:hairHi,x,.245+(i%3)*.025,.12);
+ tuft.rotation.z=(i-3)*-.16;tuft.rotation.x=-.20;
+}
+for(const side of [-1,1]){
+ alexPart(head,new THREE.SphereGeometry(.028,12,8),whiteMat,side*.105,-.035,.266,1,1,.5);
+ alexPart(head,new THREE.SphereGeometry(.016,10,8),eyeMat,side*.105,-.04,.29,1,1,.5);
+ alexPart(head,new THREE.CapsuleGeometry(.014,.075,3,6),hairMat,side*.105,.025,.265);
+}
+alexPart(head,new THREE.SphereGeometry(.035,10,8),skinMat,0,-.105,.29,1,.8,.7);
+alexPart(head,new THREE.CapsuleGeometry(.012,.07,3,6),mat(0x754a3a),0,-.185,.263,1,1,.6);
+// Brazos con mangas, puños y manos; piernas cargo y botas de explorador.
 const armPivots=[],legPivots=[];
 for(const side of [-1,1]){
- const armPivot=new THREE.Group();armPivot.position.set(side*.43,1.34,0);player.add(armPivot);
- alexPart(armPivot,new THREE.CapsuleGeometry(.115,.43,4,8),jacketMat,0,-.26,0);
- alexPart(armPivot,new THREE.CapsuleGeometry(.075,.16,3,7),skinMat,0,-.55,.015);
- armPivots.push(armPivot);
- const legPivot=new THREE.Group();legPivot.position.set(side*.19,.60,0);player.add(legPivot);
- alexPart(legPivot,new THREE.CapsuleGeometry(.125,.48,4,8),pantsMat,0,-.27,0);
- alexPart(legPivot,new THREE.BoxGeometry(.25,.16,.38),bootMat,0,-.54,.085);
- alexPart(legPivot,new THREE.BoxGeometry(.255,.045,.39),strapMat,0,-.61,.085);
- legPivots.push(legPivot);
+ const arm=new THREE.Group();arm.position.set(side*.39,1.34,.015);player.add(arm);
+ const sleeve=alexPart(arm,capsule(.115,.43),jacketMat,0,-.235,0);sleeve.rotation.z=side*-.08;
+ alexPart(arm,new THREE.CylinderGeometry(.09,.105,.09,12),jacketLight,0,-.46,.005);
+ alexPart(arm,new THREE.SphereGeometry(.085,14,10),skinMat,0,-.545,.025);
+ armPivots.push(arm);
+ const leg=new THREE.Group();leg.position.set(side*.18,.64,0);player.add(leg);
+ alexPart(leg,capsule(.125,.43),pantsMat,0,-.235,0);
+ alexPart(leg,new THREE.BoxGeometry(.17,.18,.055),pantsDark,side*.105,-.22,.105);
+ alexPart(leg,new THREE.BoxGeometry(.18,.12,.035),bootLight,side*.105,-.22,.14,1,1,.5);
+ alexPart(leg,new THREE.CylinderGeometry(.125,.13,.11,12),pantsDark,0,-.47,0);
+ alexPart(leg,new THREE.CapsuleGeometry(.14,.18,5,10),bootMat,0,-.57,.075,1,1.12,1.25);
+ alexPart(leg,new THREE.BoxGeometry(.27,.055,.36),bootLight,0,-.68,.105);
+ legPivots.push(leg);
 }
+
+// Herramientas 3D basadas en los bocetos del cuaderno: espada, hacha y pico.
+const heldToolRoot=new THREE.Group();heldToolRoot.position.set(0,-.61,.16);armPivots[1].add(heldToolRoot);
+const toolMetal=new THREE.MeshStandardMaterial({color:0x9ca9a8,metalness:.72,roughness:.3});
+const toolWood=new THREE.MeshStandardMaterial({color:0x79502f,roughness:.88});
+const heldToolModels={};
+function toolPiece(g,geo,material,x,y,z,rx=0,ry=0,rz=0){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
+function toolHandle(g,len=1){toolPiece(g,new THREE.CylinderGeometry(.052,.067,len,9),toolWood,0,len*.38,0);}
+const heldAxe=new THREE.Group();toolHandle(heldAxe,.98);toolPiece(heldAxe,new THREE.BoxGeometry(.16,.48,.2),toolMetal,.08,.83,0);toolPiece(heldAxe,new THREE.ConeGeometry(.28,.48,5),toolMetal,-.18,.84,0,0,0,Math.PI/2);heldToolRoot.add(heldAxe);heldToolModels.axe=heldAxe;
+const heldPick=new THREE.Group();toolHandle(heldPick,1.02);toolPiece(heldPick,new THREE.BoxGeometry(.88,.14,.17),toolMetal,0,.86,0);toolPiece(heldPick,new THREE.ConeGeometry(.16,.38,5),toolMetal,-.53,.86,0,0,0,Math.PI/2);toolPiece(heldPick,new THREE.ConeGeometry(.16,.38,5),toolMetal,.53,.86,0,0,0,-Math.PI/2);heldToolRoot.add(heldPick);heldToolModels.pickaxe=heldPick;
+const heldSpear=new THREE.Group();toolPiece(heldSpear,new THREE.CylinderGeometry(.04,.055,1.25,8),toolWood,0,.57,0);toolPiece(heldSpear,new THREE.ConeGeometry(.12,.34,6),toolMetal,0,1.36,0);heldToolRoot.add(heldSpear);heldToolModels.spear=heldSpear;
+function updateHeldTools(){for(const key of Object.keys(heldToolModels))heldToolModels[key].visible=(activeItem===key);}
+
 player.position.set(0,.55,5);scene.add(player);
 let woodCount=0,stoneCount=0,foodCount=0,hunger=100,health=100,gameOver=false,jumpVelocity=0,jumpHeight=0,onGround=true,selected=null,buildMode=false,activeItem="hand",crafted={axe:0,pickaxe:0,spear:0,bow:0},craftStations=[],camAngle=0,camPitch=.36,drag=false,lastX=0,lastY=0,keys={},touchDirs={},messageTimer=0,nearby=null;
 let currentIsland=0;
@@ -375,7 +418,7 @@ const islandList=document.getElementById('islandlist');for(const d of islandDest
 const msg=document.getElementById('message');function say(t){msg.textContent=t;msg.style.display='block';clearTimeout(messageTimer);messageTimer=setTimeout(()=>msg.style.display='none',2600)}
 function updateHud(){document.getElementById('healthtext').textContent=Math.ceil(health);document.getElementById('healthfill').style.width=health+'%';document.getElementById('healthfill').style.background=health<25?'#b51f2b':health<55?'#e65b42':'linear-gradient(90deg,#e94444,#ff7770)';document.getElementById('wood').textContent=woodCount;document.getElementById('stone').textContent=stoneCount;document.getElementById('food').textContent=foodCount;document.getElementById('hungertext').textContent=Math.ceil(hunger);document.getElementById('hungerfill').style.width=hunger+'%';document.getElementById('hungerfill').style.background=hunger<25?'#df5148':hunger<55?'#e6a23c':'#78c85a';renderInventory();}
 const inventoryItems=[{id:'wood',name:'Madera',icon:'🪵',count:()=>woodCount},{id:'stone',name:'Piedra',icon:'🪨',count:()=>stoneCount},{id:'food',name:'Frutos',icon:'🍓',count:()=>foodCount},{id:'axe',name:'Hacha',icon:'🪓',count:()=>crafted.axe},{id:'pickaxe',name:'Pico',icon:'⛏️',count:()=>crafted.pickaxe},{id:'spear',name:'Lanza',icon:'🔱',count:()=>crafted.spear},{id:'bow',name:'Arco',icon:'🏹',count:()=>crafted.bow},{id:'hand',name:'Manos',icon:'✋',count:()=>1}];
-function renderInventory(){const grid=document.getElementById('invgrid'),bar=document.getElementById('hotbar');if(!grid||!bar)return;grid.innerHTML='';bar.innerHTML='';for(const it of inventoryItems){const n=it.count();const b=document.createElement('button');b.className='invslot'+(activeItem===it.id?' active':'');b.innerHTML='<strong>'+it.icon+'</strong>'+it.name+'<br><b>'+n+'</b>';b.disabled=n<=0;b.onclick=()=>{if(n>0){activeItem=it.id;renderInventory();say('Seleccionaste '+it.name+'.');}};grid.append(b);if(['hand','axe','pickaxe','spear','food'].includes(it.id)){const h=document.createElement('button');h.className='hot'+(activeItem===it.id?' active':'');h.innerHTML='<b>'+it.icon+'</b>'+it.name;h.onclick=()=>{activeItem=it.id;renderInventory();};bar.append(h);}}}
+function renderInventory(){const grid=document.getElementById('invgrid'),bar=document.getElementById('hotbar');if(!grid||!bar)return;grid.innerHTML='';bar.innerHTML='';for(const it of inventoryItems){const n=it.count();const b=document.createElement('button');b.className='invslot'+(activeItem===it.id?' active':'');b.innerHTML='<strong>'+it.icon+'</strong>'+it.name+'<br><b>'+n+'</b>';b.disabled=n<=0;b.onclick=()=>{if(n>0){activeItem=it.id;renderInventory();say('Seleccionaste '+it.name+'.');}};grid.append(b);if(['hand','axe','pickaxe','spear','food'].includes(it.id)){const h=document.createElement('button');h.className='hot'+(activeItem===it.id?' active':'');h.innerHTML='<b>'+it.icon+'</b>'+it.name;h.onclick=()=>{activeItem=it.id;renderInventory();};bar.append(h);}}updateHeldTools();}
 window.toggleInventory=()=>{const el=document.getElementById('inventory');el.style.display=el.style.display==='block'?'none':'block';renderInventory();};
 function eat(){if(foodCount<=0){say('No tienes comida. Busca arbustos con frutos.');return;}if(hunger>=100){say('No tienes hambre ahora mismo.');return;}foodCount--;hunger=Math.min(100,hunger+30);health=Math.min(100,health+4);updateHud();say('¡Comiste frutos! Hambre +30 y vida +4.');}
 // Hitboxes circulares: Alex no atraviesa vegetación, rocas, fauna terrestre ni construcciones.
@@ -388,7 +431,8 @@ function isBlocked(x,z){
   // El macizo bloquea el paso salvo en la franja transitable del sendero.
   const mx=x,mz=z+23.2,inside=(mx*mx)/(12.8*12.8)+(mz*mz)/(11.2*11.2)<1.08;
   const onMountainTrail=mountainPathInfo(x,z).distance<2.05;
-  if(inside&&!onMountainTrail)return true;
+  const nearDungeonApproach=Math.hypot(x-altar.position.x,z-altar.position.z)<4.8;
+  if(inside&&!onMountainTrail&&!nearDungeonApproach)return true;
   // Mantener el sendero despejado aunque cruce la franja de árboles exterior.
   if(!onMountainTrail)for(const c of worldColliders){if(c.obj&&!c.obj.visible)continue;if(Math.hypot(x-c.x,z-c.z)<c.r+PLAYER_RADIUS)return true;}
   for(const w of buildingWalls){if(Math.abs(x-w.x)<w.hx+PLAYER_RADIUS && Math.abs(z-w.z)<w.hz+PLAYER_RADIUS)return true;}
@@ -400,8 +444,8 @@ function moveWithCollisions(dx,dz){
   if(!isBlocked(px+dx,pz))player.position.x=px+dx;
   if(!isBlocked(player.position.x,pz+dz))player.position.z=pz+dz;
 }
-function nearest(){let best=null,d=999;for(const r of resources){if(!r.obj.visible)continue;let q=Math.hypot(player.position.x-r.x,player.position.z-r.z);if(q<2.5&&q<d){best=r;d=q;}}for(const t of craftStations){let q=Math.hypot(player.position.x-t.x,player.position.z-t.z);if(q<2.7&&q<d){best={type:'table'};d=q;}}const rs=Math.hypot(player.position.x-runeStone.position.x,player.position.z-runeStone.position.z);if(!hasAncientStone&&runeStone.visible&&rs<2.8&&rs<d){best={type:'ancientStone'};d=rs;}const rsword=Math.hypot(player.position.x,player.position.z+23.2);if(rsword<3.1&&Math.abs(player.position.y-14.0)<3.4&&rsword<d){best={type:'summitSword'};d=rsword;}const ra=Math.hypot(player.position.x-altar.position.x,player.position.z-altar.position.z);if(ra<3.2&&ra<d){best={type:'altar'};d=ra;}if(Math.hypot(player.position.x+10,player.position.z+7)<3)return {type:'wreck'};return best}
-function interact(){if(buildMode&&selected){placeSelected();return;}let n=nearest();if(!n){say('Acércate a un árbol, una roca, la mesa, la piedra antigua o al naufragio.');return;}if(n.type==='table'){openCraft();return;}if(n.type==='summitSword'){if(!ancientSwordDiscovered){ancientSwordDiscovered=true;say('La Espada del Olvido está incrustada en la cumbre. Su piedra antigua no se parece a ninguna espada fabricada. Aún no puedes extraerla.');}else{say('La Espada del Olvido sigue firmemente incrustada en la cumbre.');}}else if(n.type==='ancientStone'){hasAncientStone=true;runeStone.visible=false;say('¡Encontraste la Piedra del Recuerdo! Llévala al pedestal frente a la montaña.');}else if(n.type==='altar'){if(dungeonOpen){say('La entrada de la primera mazmorra ya está abierta.');}else if(hasAncientStone){hasAncientStone=false;dungeonOpen=true;seal.visible=false;dungeonGlow.intensity=2.4;socket.material=mat(0x63d8c4,.35);say('¡La piedra encajó! Se abrió la entrada de la primera mazmorra.');}else{say('El pedestal tiene un hueco. Parece necesitar una piedra antigua.');}}else if(n.type==='tree'){woodCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de madera!');}else if(n.type==='rock'){stoneCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de piedra!');}else if(n.type==='food'){foodCount+=3;n.obj.visible=false;say('¡Recogiste 3 frutos! Comida +3.');}else say('La nota dice: «La isla no aparece en ningún mapa». Encontraste una brújula.');updateHud();}
+function nearest(){let best=null,d=999;for(const r of resources){if(!r.obj.visible)continue;let q=Math.hypot(player.position.x-r.x,player.position.z-r.z);if(q<2.5&&q<d){best=r;d=q;}}for(const t of craftStations){let q=Math.hypot(player.position.x-t.x,player.position.z-t.z);if(q<2.7&&q<d){best={type:'table'};d=q;}}const rs=Math.hypot(player.position.x-runeStone.position.x,player.position.z-runeStone.position.z);if(!hasAncientStone&&runeStone.visible&&rs<2.8&&rs<d){best={type:'ancientStone'};d=rs;}const rsword=Math.hypot(player.position.x,player.position.z+23.2);if(rsword<3.1&&Math.abs(player.position.y-14.0)<3.4&&rsword<d){best={type:'summitSword'};d=rsword;}const ra=Math.hypot(player.position.x-altar.position.x,player.position.z-altar.position.z);if(ra<3.2&&ra<d){best={type:'altar'};d=ra;}const rd=Math.hypot(player.position.x-seal.position.x,player.position.z-seal.position.z);if(rd<3.8&&rd<d){best={type:'altar'};d=rd;}if(Math.hypot(player.position.x+10,player.position.z+7)<3)return {type:'wreck'};return best}
+function interact(){if(buildMode&&selected){placeSelected();return;}let n=nearest();if(!n){say('Acércate a un árbol, una roca, la mesa, la piedra antigua o al naufragio.');return;}if(n.type==='table'){openCraft();return;}if(n.type==='summitSword'){if(!ancientSwordDiscovered){ancientSwordDiscovered=true;say('La Espada del Olvido está incrustada en la cumbre. Su piedra antigua no se parece a ninguna espada fabricada. Aún no puedes extraerla.');}else{say('La Espada del Olvido sigue firmemente incrustada en la cumbre.');}}else if(n.type==='ancientStone'){hasAncientStone=true;runeStone.visible=false;say('¡Encontraste la Piedra del Recuerdo! Llévala al pedestal frente a la montaña.');}else if(n.type==='altar'){if(dungeonOpen){say('La entrada de la primera mazmorra ya está abierta.');}else if(hasAncientStone){hasAncientStone=false;dungeonOpen=true;seal.visible=false;dungeonMouth.visible=true;dungeonGlow.intensity=2.8;socket.material=mat(0x63d8c4,.35);say('¡La piedra encajó! El sello se abrió y reveló la entrada de la primera mazmorra.');}else{say('El sello está cerrado. Busca la Piedra del Recuerdo junto al brillo verde del lado este de la montaña y vuelve a esta entrada.');}}else if(n.type==='tree'){woodCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de madera!');}else if(n.type==='rock'){stoneCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de piedra!');}else if(n.type==='food'){foodCount+=3;n.obj.visible=false;say('¡Recogiste 3 frutos! Comida +3.');}else say('La nota dice: «La isla no aparece en ningún mapa». Encontraste una brújula.');updateHud();}
 let lastAttack=0;
 function attackAnimal(){
  const now=performance.now();if(now-lastAttack<650)return;lastAttack=now;
