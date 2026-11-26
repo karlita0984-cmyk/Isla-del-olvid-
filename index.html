@@ -550,7 +550,7 @@ let last=performance.now();function animate(now){requestAnimationFrame(animate);
 let f=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,r=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX;
 let forward=new THREE.Vector3(-Math.sin(camAngle),0,-Math.cos(camAngle)),right=new THREE.Vector3(Math.cos(camAngle),0,-Math.sin(camAngle)),move=forward.multiplyScalar(f).add(right.multiplyScalar(r));if(move.length()>0){move.normalize();moveWithCollisions(move.x*dt*5,move.z*dt*5);player.rotation.y=Math.atan2(move.x,move.z);}
 if(!onGround){jumpVelocity-=18*dt;jumpHeight+=jumpVelocity*dt;if(jumpHeight<=0){jumpHeight=0;jumpVelocity=0;onGround=true;}}const mountainGround=mountainPathInfo(player.position.x,player.position.z);const onMountainPath=mountainGround.distance<2.05;player.position.y=(onMountainPath?mountainGround.height:.55)+jumpHeight;
-const t=now*.001;const moving=move.length()>0;const stride=moving?Math.sin(now*.012)*.62:0;for(let i=0;i<2;i++){legPivots[i].rotation.x=stride*(i===0?1:-1);armPivots[i].rotation.x=-stride*(i===0?1:-1)*.72;}body.position.y=1+(moving?Math.abs(Math.sin(now*.012))*.045:Math.sin(now*.002)*.012);head.position.y=1.72+(moving?Math.abs(Math.sin(now*.012))*.035:0);
+const t=now*.001;const moving=move.length()>0;const stride=moving?Math.sin(now*.012)*.62:0;for(let i=0;i<2;i++){legPivots[i].rotation.x=stride*(i===0?1:-1);armPivots[i].rotation.x=-stride*(i===0?1:-1)*.72;}torso.position.y=1+(moving?Math.abs(Math.sin(now*.012))*.045:Math.sin(now*.002)*.012);head.position.y=1.72+(moving?Math.abs(Math.sin(now*.012))*.035:0);
 for(const a of animalAnimations){
  if(!a.obj.visible)continue;
  const phase=t*a.walkSpeed+a.phase, gait=Math.sin(phase*7.5), drift=Math.sin(phase*.42)*.95;
