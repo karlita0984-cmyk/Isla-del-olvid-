@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Isla del Olvido — Demo 3D</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#102c38;color:#fff;font-family:system-ui,-apple-system,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#game{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:fixed;inset:12px 12px auto;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.panel{background:#09202bcc;border:1px solid #ffffff35;border-radius:13px;padding:9px 12px;box-shadow:0 4px 18px #0004;font-size:13px}
+#stats{line-height:1.65}#help{max-width:280px;text-align:right}
+#healthrow{font-weight:800;color:#ffe3e3;margin-bottom:3px}#healthbar{display:inline-block;width:105px;height:9px;margin-left:5px;background:#ffffff30;border-radius:99px;overflow:hidden;vertical-align:middle}#healthfill{display:block;width:100%;height:100%;background:linear-gradient(90deg,#e94444,#ff7770);transition:width .2s}
+#actions{flex-wrap:wrap;justify-content:flex-end;max-width:290px}#combatPair{display:flex;gap:9px;flex:0 0 auto;align-items:center}#actions .touchbtn{box-shadow:0 3px 10px #0007;border-color:#ffffff88}
+#hungerbar{display:inline-block;width:105px;height:9px;margin-left:5px;background:#ffffff30;border-radius:99px;overflow:hidden;vertical-align:middle}#hungerfill{display:block;width:100%;height:100%;background:linear-gradient(90deg,#e6a23c,#78c85a);transition:width .2s}
+#compass{position:fixed;z-index:3;top:112px;right:12px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,#173e4b 0 48%,#09202b 50% 100%);border:2px solid #f4d88a;box-shadow:0 4px 18px #0007;display:grid;place-items:center;pointer-events:none}
+#compass .rose{position:relative;width:54px;height:54px;border:1px solid #ffffff55;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:900}
+#needle{position:absolute;left:50%;top:7px;width:4px;height:38px;transform-origin:50% 20px;transform:translateX(-50%);background:linear-gradient(#ff625d 0 50%,#e8e8e8 50%);clip-path:polygon(50% 0,100% 50%,60% 50%,60% 100%,40% 100%,40% 50%,0 50%)}
+#compass small{position:absolute;bottom:-15px;font-size:9px;letter-spacing:.5px;color:#ffe6a2;white-space:nowrap}
+#mapbtn{position:fixed;z-index:3;right:12px;top:198px;border:1px solid #ffffff66;background:#123b48ee;color:white;border-radius:12px;padding:10px 13px;font-weight:800}
+#islandmap{position:fixed;z-index:10;inset:0;display:none;place-items:center;background:#04131ddd;padding:16px}
+#mapcard{width:min(94vw,620px);max-height:88vh;overflow:auto;background:linear-gradient(145deg,#123b48,#071b27);border:1px solid #ffffff55;border-radius:20px;padding:18px;box-shadow:0 18px 55px #000b}
+#mapcard h2{margin:0 0 5px}#mapcard p{margin:0 0 14px;color:#c6dddd;font-size:13px}
+#islandlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.islandchoice{display:flex;align-items:center;gap:9px;text-align:left;border:1px solid #ffffff38;border-radius:13px;padding:10px;background:#ffffff10;color:#fff;min-height:66px}
+.islandchoice strong{display:block;font-size:13px}.islandchoice small{display:block;color:#c5d9dc;font-size:11px;margin-top:3px}
+#bagbtn{position:fixed;right:12px;top:246px;z-index:3;border:1px solid #ffffff55;background:#123b48ee;color:#fff;border-radius:12px;padding:10px 14px;font-weight:800;pointer-events:auto}
+#inventory{position:fixed;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(92vw,500px);max-height:78vh;overflow:auto;background:linear-gradient(145deg,#102f3beF,#071b27f5);border:1px solid #ffffff55;border-radius:18px;padding:16px;box-shadow:0 18px 55px #000b}
+#inventory h2{margin:0 0 5px}#inventory p{margin:0 0 12px;color:#c6dddd;font-size:13px}
+#invgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.invslot{min-height:78px;border:1px solid #ffffff35;background:linear-gradient(145deg,#ffffff18,#ffffff08);border-radius:12px;color:white;padding:8px 4px;text-align:center;font-size:12px}
+.invslot strong{display:block;font-size:23px}.invslot.active{border:2px solid #ffd36b;background:#8b682c55}
+#hotbar{position:fixed;z-index:2;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:5px;pointer-events:auto}
+.hot{width:58px;height:54px;border:1px solid #ffffff55;border-radius:10px;background:#09202bcc;color:#fff;font-size:11px}.hot b{display:block;font-size:20px}.hot.active{border:2px solid #ffd36b;background:#765b2ecc}
+#message{position:fixed;left:50%;top:20%;transform:translateX(-50%);background:#09202ddd;border:1px solid #ffffff55;border-radius:12px;padding:10px 15px;display:none;text-align:center;max-width:85%;pointer-events:none}
+#buildmenu{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:none;gap:8px;flex-wrap:wrap;justify-content:center;width:min(94%,520px)}
+.build{border:1px solid #ffffff55;background:#123b48ee;color:white;border-radius:12px;padding:10px 13px;font-weight:700;font-size:13px;touch-action:manipulation}
+.build:active{background:#28766e}
+#craftmenu{position:fixed;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(92vw,430px);max-height:78vh;overflow:auto;background:#09202bf2;border:1px solid #ffffff55;border-radius:18px;padding:16px;box-shadow:0 12px 40px #0009}
+#craftmenu h2{margin:0 0 8px;font-size:20px}#craftmenu p{margin:5px 0 12px;color:#d4e8e8;font-size:13px}
+.recipe{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#ffffff12;border:1px solid #ffffff22;border-radius:11px;padding:9px;margin:7px 0;font-size:13px}
+.recipe button{background:#28766e;color:white;border:0;border-radius:8px;padding:9px 11px;font-weight:700;white-space:nowrap}.recipe button:disabled{opacity:.4}
+#touch{position:fixed;bottom:24px;left:18px;display:none;width:136px;height:136px;align-items:center;justify-content:center;z-index:8;touch-action:none}
+#joystickBase{position:absolute;inset:0;border:2px solid #ffffff70;border-radius:50%;background:radial-gradient(circle,#ffffff18,#09202b99);box-shadow:0 4px 18px #0008;touch-action:none}
+#joystickKnob{position:absolute;left:43px;top:43px;width:50px;height:50px;border-radius:50%;border:2px solid #ffffffbb;background:linear-gradient(145deg,#5bb6c9ee,#14546aee);box-shadow:0 3px 12px #0009;pointer-events:none}
+.touchbtn{width:44px;height:44px;border:1px solid #ffffff66;background:#09202bbb;color:white;border-radius:12px;font-size:18px;font-weight:bold;touch-action:none}
+#actions{position:fixed;right:14px;bottom:22px;display:none;gap:9px}
+#actions .touchbtn{width:60px;height:60px;font-size:12px}
+#actions #jump{background:linear-gradient(145deg,#2a8290ee,#125060ee);font-weight:900;order:5}#actions #attack{order:4}
+#loading{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(#163d50,#0a202c);z-index:5;text-align:center;padding:25px}
+#loading small{display:block;opacity:.8;margin-top:8px}
+@media(max-width:520px){#compass{width:64px;height:64px;top:10px;right:10px}#compass .rose{width:46px;height:46px}#needle{height:32px;transform-origin:50% 17px}#mapbtn{top:82px;right:10px;padding:8px 10px}#bagbtn{top:128px;right:10px}#islandlist{grid-template-columns:1fr 1fr}.islandchoice{padding:8px;min-height:62px}}
+@media(pointer:coarse){#touch,#actions{display:flex}#help{display:none}
+/* En pantallas táctiles, la barra se coloca por encima de los controles. */
+#hotbar{top:118px;bottom:auto;left:50%;transform:translateX(-50%);width:min(88vw,440px);max-width:calc(100vw - 24px);overflow-x:auto;overflow-y:hidden;justify-content:flex-start;padding:4px 2px;scrollbar-width:thin;z-index:7}
+#hotbar .hot{flex:0 0 48px;width:48px;height:46px;font-size:10px;padding:3px}
+#hotbar .hot b{font-size:17px}
+#buildmenu{bottom:104px;max-height:34vh;overflow-y:auto;padding:5px}
+}
+</style>
+</head>
+<body>
+<div id="loading"><div><h2>🏝️ Isla del Olvido</h2><div>Preparando la isla en 3D…</div><small id="loadmsg">Cargando motor gráfico</small></div></div>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div class="panel" id="stats"><div id="healthrow">❤️ Vida: <span id="healthtext">100</span>% <span id="healthbar"><span id="healthfill"></span></span></div>🪵 Madera: <b id="wood">0</b><br>🪨 Piedra: <b id="stone">0</b><br>🍓 Comida: <b id="food">0</b><br>🍗 Hambre: <span id="hungertext">100</span>% <span id="hungerbar"><span id="hungerfill"></span></span><br>📍 <span id="place">Playa del naufragio</span></div>
+ <div class="panel" id="help">WASD / flechas: moverse<br>E: interactuar / recolectar · G: acción<br>F: comer · B: construir · 1/2/3: edificios<br>Arrastra para girar la cámara</div>
+</div>
+<div id="compass" aria-label="Brújula"><div class="rose">N<span id="needle"></span><small id="heading">NORTE</small></div></div>
+<button id="mapbtn" onclick="window.toggleIslandMap()">🧭 Mapa · 7 islas</button>
+<div id="islandmap"><div id="mapcard"><h2>🗺️ Archipiélago del Olvido</h2><p>Elige una isla para viajar. Cada territorio guarda un paisaje y recursos distintos.</p><div id="islandlist"></div><button class="build" onclick="window.toggleIslandMap(false)" style="margin-top:12px;width:100%">Cerrar mapa</button></div></div>
+<button id="bagbtn" onclick="window.toggleInventory()">🎒 Mochila</button>
+<div id="inventory"><h2>🎒 Inventario de Alex</h2><p>Materiales, comida y equipo que llevas contigo.</p><div id="invgrid"></div><button class="build" onclick="window.toggleInventory()" style="margin-top:12px;width:100%">Cerrar inventario</button></div>
+<div id="hotbar"></div>
+<div id="message"></div>
+<div id="craftmenu"><h2>🛠️ Mesa de fabricación</h2><p>Fabrica equipo usando los materiales que has recolectado.</p>
+ <div id="recipes"></div><button class="build" id="closecraft">Cerrar</button></div>
+<div id="buildmenu">
+ <button class="build" data-build="cabin">🏠 Refugio · 6🪵 3🪨</button>
+ <button class="build" data-build="fire">🔥 Fogata · 2🪵 1🪨</button>
+ <button class="build" data-build="chest">📦 Almacén · 4🪵 2🪨</button>
+ <button class="build" data-build="table">🛠️ Mesa de fabricación · 5🪵 2🪨</button>
+ <button class="build" data-build="cancel">✕ Cerrar</button>
+</div>
+<div id="touch" aria-label="Joystick de movimiento">
+ <div id="joystickBase"><div id="joystickKnob"></div></div>
+</div>
+<div id="actions"><button class="touchbtn" id="interact">E<br>USAR</button><button class="touchbtn" id="eat">🍎<br>COMER</button><button class="touchbtn" id="build">B<br>ARMAR</button><span id="combatPair"><button class="touchbtn" id="attack">⚔️<br>ATACAR</button><button class="touchbtn" id="jump">⬆️<br>SALTAR</button></span></div>
+<script>
+function loadThreeAndStart(){
+ const loading=document.getElementById('loading'),loadmsg=document.getElementById('loadmsg');
+ const sources=[
+  'https://unpkg.com/three@0.160.0/build/three.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js',
+  'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js'
+ ];
+ let index=0;
+ function attempt(){
+  if(window.THREE){startIDO();return;}
+  if(index>=sources.length){loadmsg.textContent='No se pudo descargar el motor 3D. Comprueba tu conexión y vuelve a cargar.';return;}
+  loadmsg.textContent='Conectando motor 3D ('+(index+1)+'/3)…';
+  const script=document.createElement('script');script.src=sources[index++];script.onload=()=>{if(window.THREE)startIDO();else attempt();};script.onerror=attempt;document.head.appendChild(script);
+ }
+ attempt();
+}
+function startIDO(){
+ const loading=document.getElementById('loading'),loadmsg=document.getElementById('loadmsg');
+ try{
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x55c9f2);scene.fog=new THREE.Fog(0x8bdcf0,88,230);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,280);
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('game'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.85));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0x55c9f2);
+scene.add(new THREE.HemisphereLight(0xd9f5ff,0x385b35,2.8));
+scene.fog=new THREE.FogExp2(0x9bdde8,.0028);
+const sun=new THREE.DirectionalLight(0xfff0c2,3.0);sun.position.set(-18,30,12);sun.castShadow=true;sun.shadow.mapSize.set(4096,4096);sun.shadow.camera.left=-52;sun.shadow.camera.right=52;sun.shadow.camera.top=52;sun.shadow.camera.bottom=-52;sun.shadow.bias=-0.00025;sun.shadow.normalBias=.025;scene.add(sun);
+const mat=(c,rough=.9)=>new THREE.MeshStandardMaterial({color:c,roughness:rough});
+// Texturas procedurales creadas en el navegador: aportan detalle sin descargar archivos pesados.
+function makeSurfaceTexture(base,spots,seed=1){const c=document.createElement('canvas');c.width=c.height=512;const ctx=c.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,512,512);let n=seed;const rnd=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296;};for(let i=0;i<15000;i++){const x=rnd()*512,y=rnd()*512,r=.35+rnd()*2.1;ctx.globalAlpha=.08+rnd()*.18;ctx.fillStyle=spots[Math.floor(rnd()*spots.length)];ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(2,2);tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.generateMipmaps=true;tex.minFilter=THREE.LinearMipmapLinearFilter;return tex;}
+const grassTex=makeSurfaceTexture('#62bd45',['#2e8b3e','#8bd64e','#b6df62','#256b36'],71),sandTex=makeSurfaceTexture('#f0d58b',['#d8b66b','#fff0a8','#c9a15e','#fff6cf'],19),rockTex=makeSurfaceTexture('#858b88',['#596765','#b2b4a8','#707c78'],31);
+const sand=mat(0xe6c98b),grass=mat(0x62bd45),darkgrass=mat(0x398b3b),wood=mat(0x986039),leaf=mat(0x159447),leaf2=mat(0x59c94d),rockmat=mat(0x858b88),water= new THREE.MeshStandardMaterial({color:0x08b9d4,roughness:.18,metalness:.22});
+grass.map=grassTex;grass.bumpMap=grassTex;grass.bumpScale=.11;grass.roughness=.96;grass.color.setHex(0xffffff);sand.map=sandTex;sand.bumpMap=sandTex;sand.bumpScale=.065;sand.roughness=.94;rockmat.map=rockTex;rockmat.bumpMap=rockTex;rockmat.bumpScale=.13;rockmat.roughness=.98;
+water.transparent=true;water.opacity=.94;water.envMapIntensity=.7;const oceanGeo=new THREE.PlaneGeometry(200,200,32,32);const ocean=new THREE.Mesh(oceanGeo,water);ocean.rotation.x=-Math.PI/2;ocean.position.y=-.55;ocean.receiveShadow=true;scene.add(ocean);const oceanBase=oceanGeo.attributes.position.array.slice();
+const island=new THREE.Mesh(new THREE.CylinderGeometry(30,33.2,2.1,112),grass);island.position.y=-.15;island.receiveShadow=true;scene.add(island);
+const beach=new THREE.Mesh(new THREE.CylinderGeometry(31.2,33.6,.38,112),sand);beach.position.y=.22;scene.add(beach);
+const inner=new THREE.Mesh(new THREE.CylinderGeometry(26.5,28.8,.28,112),grass);inner.position.y=.43;inner.receiveShadow=true;scene.add(inner);
+// Detalle de terreno: pequeñas matas y piedras instanciadas para dar textura sin crear cientos de objetos individuales.
+const bladeGeo=new THREE.ConeGeometry(.075,.48,4);bladeGeo.translate(0,.22,0);const bladeMat=mat(0x48a83d);const grassDetails=new THREE.InstancedMesh(bladeGeo,bladeMat,1450);const dummy=new THREE.Object3D();let bladeN=0;
+for(let i=0;i<1450;i++){const a=i*2.399963,r=2.8+Math.sqrt((i+.5)/1450)*23.8,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x,z)>25.8)continue;dummy.position.set(x,.59,z);dummy.rotation.set((Math.random()-.5)*.16,Math.random()*Math.PI*2,(Math.random()-.5)*.22);const sc=.55+Math.random()*.9;dummy.scale.set(sc,sc,sc);dummy.updateMatrix();grassDetails.setMatrixAt(bladeN++,dummy.matrix);}
+grassDetails.count=bladeN;grassDetails.instanceMatrix.needsUpdate=true;grassDetails.castShadow=false;scene.add(grassDetails);
+const pebbleGeo=new THREE.DodecahedronGeometry(.16,0),pebbleMat=mat(0x898b7e);const pebbles=new THREE.InstancedMesh(pebbleGeo,pebbleMat,360);let pebbleN=0;for(let i=0;i<360;i++){const a=i*2.399963,r=5+(i%31)*.66,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r>25)continue;dummy.position.set(x,.59,z);dummy.rotation.set(Math.random(),Math.random()*6,Math.random());const sc=.45+Math.random()*.8;dummy.scale.set(sc,sc*.55,sc);dummy.updateMatrix();pebbles.setMatrixAt(pebbleN++,dummy.matrix);}pebbles.count=pebbleN;pebbles.instanceMatrix.needsUpdate=true;scene.add(pebbles);
+// Borde de espuma que separa visualmente la arena del mar.
+const shoreFoam=new THREE.Mesh(new THREE.TorusGeometry(31.15,.12,5,160),new THREE.MeshBasicMaterial({color:0xbafff0,transparent:true,opacity:.58}));shoreFoam.rotation.x=Math.PI/2;shoreFoam.position.y=.435;scene.add(shoreFoam);
+// Disco solar cálido y una luz de relleno suave para dar más profundidad al cielo.
+const sunDisc=new THREE.Mesh(new THREE.SphereGeometry(2.25,20,14),new THREE.MeshBasicMaterial({color:0xfff19a}));sunDisc.position.set(-38,25,-72);scene.add(sunDisc);const sunFill=new THREE.PointLight(0xffd27a,.72,125);sunFill.position.set(-24,18,-32);scene.add(sunFill);const rimLight=new THREE.DirectionalLight(0x65dfff,.62);rimLight.position.set(18,14,-20);scene.add(rimLight);
+// Acantilados rocosos y terrazas que dan volumen al borde de la isla.
+const cliffMat=mat(0x77766b),cliffDark=mat(0x555e5a),stoneRidge=mat(0x96958a);
+for(let i=0;i<64;i++){const a=i*Math.PI*2/64,rad=29.2+(i%3)*.58,h=1.5+(i%5)*.5;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.8+(i%4)*.18,0),i%3?cliffMat:cliffDark);rock.position.set(Math.cos(a)*rad,-.35+h*.22,Math.sin(a)*rad);rock.scale.set(1.1,h,1);rock.rotation.set(i*.31,i*.7,i*.19);rock.castShadow=true;rock.receiveShadow=true;scene.add(rock);}
+// Nubes suaves y lejanas para dar profundidad al cielo sin cargar demasiado el iPad.
+const cloudMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.72,depthWrite:false});
+for(let i=0;i<9;i++){const cloud=new THREE.Group();for(let j=0;j<4;j++){const puff=new THREE.Mesh(new THREE.SphereGeometry(1,9,7),cloudMat);puff.scale.set(1.25,.38,.62);puff.position.set((j-1.5)*.72,Math.sin(j*2)*.12,0);cloud.add(puff);}cloud.position.set(-35+i*9,15+(i%3)*2,-32-(i%4)*7);cloud.scale.setScalar(.8+(i%3)*.18);scene.add(cloud);}
+const skyCanvas=document.createElement('canvas');skyCanvas.width=16;skyCanvas.height=256;const skyCtx=skyCanvas.getContext('2d');const skyGrad=skyCtx.createLinearGradient(0,0,0,256);skyGrad.addColorStop(0,'#17618e');skyGrad.addColorStop(.48,'#58a9cf');skyGrad.addColorStop(1,'#d4e9dc');skyCtx.fillStyle=skyGrad;skyCtx.fillRect(0,0,16,256);const skyTex=new THREE.CanvasTexture(skyCanvas);const sky=new THREE.Mesh(new THREE.SphereGeometry(230,24,16),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false,fog:false}));sky.renderOrder=-2;scene.add(sky);
+const path=new THREE.Mesh(new THREE.RingGeometry(1.4,2.1,40),sand);path.rotation.x=-Math.PI/2;path.position.set(0,.56,3);scene.add(path);
+function box(x,y,z,sx,sy,sz,m){let o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);return o}
+function tree(x,z,s=1){let g=new THREE.Group();let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.32*s,2*s,9),wood);trunk.position.y=s;trunk.castShadow=true;trunk.receiveShadow=true;g.add(trunk);const crownMat=Math.random()>.5?leaf:leaf2;for(let i=0;i<7;i++){const crown=new THREE.Mesh(new THREE.IcosahedronGeometry((i===0?1.08:.62)*s,1),i%3===0?leaf2:crownMat);const a=i*Math.PI*2/6;crown.position.set(i===0?0:Math.cos(a)*.58*s,2.12*s+(i===0?.18:Math.sin(i*2)*.13)*s,i===0?0:Math.sin(a)*.58*s);crown.scale.set(1.08,1.12,.98);crown.castShadow=true;crown.receiveShadow=true;g.add(crown);}g.position.set(x,.5,z);scene.add(g);resources.push({type:'tree',obj:g,x,z});worldColliders.push({x,z,r:.68*s,obj:g});swayObjects.push({obj:g,amp:.018,speed:1.1+Math.random()});}
+function rock(x,z){let o=new THREE.Mesh(new THREE.DodecahedronGeometry(.8,0),rockmat);o.position.set(x,.95,z);o.scale.set(1.2,.8,1);o.rotation.set(.2,.4,.3);o.castShadow=true;scene.add(o);resources.push({type:'rock',obj:o,x,z});worldColliders.push({x,z,r:.58,obj:o});}
+// Listas del mundo: deben existir antes de crear árboles y rocas de las islas.
+const resources=[],swayObjects=[],worldColliders=[];
+// Seis territorios nuevos alrededor de la isla del naufragio: todos quedan dentro del océano visible.
+const islandDestinations=[
+ {id:0,name:'Isla del Naufragio',biome:'Playa, selva y montañas',emoji:'🏝️',x:0,z:0,r:31.7},
+ {id:1,name:'Selva Esmeralda',biome:'Bosque denso y frutos',emoji:'🌴',x:61,z:0,r:13.5,color:0x398b42,sand:0xe9c982,trees:9,rocks:2},
+ {id:2,name:'Montañas del Eco',biome:'Picos altos y piedra',emoji:'⛰️',x:30.5,z:53,r:14,color:0x71816f,sand:0xcbbd9b,trees:3,rocks:8,mountains:true},
+ {id:3,name:'Desierto Dorado',biome:'Dunas, cactus y ruinas',emoji:'🏜️',x:-30.5,z:53,r:13,color:0xc6a24f,sand:0xf0d18a,trees:0,rocks:4,desert:true},
+ {id:4,name:'Isla Volcánica',biome:'Roca oscura y lava',emoji:'🌋',x:-61,z:0,r:14,color:0x4e5555,sand:0x9c7257,trees:2,rocks:8,volcano:true},
+ {id:5,name:'Ruinas Antiguas',biome:'Templos y vegetación',emoji:'🏛️',x:-30.5,z:-53,r:13.5,color:0x638d55,sand:0xd8bd83,trees:5,rocks:5,ruins:true},
+ {id:6,name:'Isla Glaciar',biome:'Nieve, hielo y pinos',emoji:'❄️',x:30.5,z:-53,r:13,color:0xb8d7d9,sand:0xe4f0ed,trees:5,rocks:3,snow:true}
+];
+const islandGrounds=[];
+for(const d of islandDestinations.slice(1)){
+ const g=new THREE.Group();g.position.set(d.x,0,d.z);scene.add(g);
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(d.r*.91,d.r,2.0,48),mat(d.color));base.position.y=-.18;base.receiveShadow=true;base.castShadow=true;g.add(base);
+ const shore=new THREE.Mesh(new THREE.CylinderGeometry(d.r*.97,d.r*1.02,.42,48),mat(d.sand));shore.position.y=.28;shore.receiveShadow=true;g.add(shore);
+ const top=new THREE.Mesh(new THREE.CylinderGeometry(d.r*.79,d.r*.86,.22,48),mat(d.color));top.position.y=.52;top.receiveShadow=true;g.add(top);
+ // Rocas decorativas en el borde para dar volumen a cada costa.
+ for(let i=0;i<12;i++){const a=i*Math.PI*2/12,rr=d.r*.91;const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.75+(i%3)*.22,0),mat(d.volcano?0x34383a:d.snow?0xc4d8d8:0x777d78));b.position.set(Math.cos(a)*rr,.35,Math.sin(a)*rr);b.scale.set(1.2,1.25,1);b.rotation.set(i*.2,i*.7,i*.13);b.castShadow=true;g.add(b);}
+ if(d.mountains||d.volcano){for(let i=0;i<(d.volcano?3:5);i++){const a=i*2.4,rr=d.r*.34+(i%2)*1.3,h=(d.volcano?5.5:4.5)+(i%3)*1.5;const peak=new THREE.Mesh(new THREE.ConeGeometry(d.volcano?2.7:2.2,h,8),mat(d.volcano?0x45403d:0x69736f));peak.position.set(Math.cos(a)*rr,.58+h/2,Math.sin(a)*rr);peak.castShadow=true;g.add(peak);if(d.volcano&&i===0){const lava=new THREE.Mesh(new THREE.CircleGeometry(.8,16),new THREE.MeshBasicMaterial({color:0xff5b20}));lava.rotation.x=-Math.PI/2;lava.position.set(0,.58+h-.1,0);g.add(lava);}}}
+ if(d.desert){for(let i=0;i<5;i++){const dune=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),mat(0xd8b76a));dune.position.set((i-2)*3,.65,Math.sin(i*2)*4);dune.scale.set(3,.7,2);g.add(dune);}}
+ if(d.ruins){for(let i=0;i<4;i++){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.65,2.8,.65),mat(0xb7a77e));pillar.position.set((i%2?1:-1)*3,1.9,(i<2?-2:2));pillar.castShadow=true;g.add(pillar);}const lintel=new THREE.Mesh(new THREE.BoxGeometry(7,.55,1),mat(0x9f916f));lintel.position.set(0,3.25,0);g.add(lintel);}
+ if(d.snow){const snowCap=new THREE.Mesh(new THREE.CircleGeometry(d.r*.76,48),mat(0xe6f3f2));snowCap.rotation.x=-Math.PI/2;snowCap.position.y=.65;g.add(snowCap);}
+ if(d.trees){for(let i=0;i<d.trees;i++){const a=i*2.399,r=d.r*.18+(i%3)*2.0,x=d.x+Math.cos(a)*r,z=d.z+Math.sin(a)*r;if(d.snow){const pine=new THREE.Group(),tr=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.6,7),wood);tr.position.y=.8;pine.add(tr);for(let k=0;k<3;k++){const c=new THREE.Mesh(new THREE.ConeGeometry(1.15-k*.22,1.9,7),mat(0x315d55));c.position.y=1.7+k*.45;pine.add(c);}pine.position.set(x,.6,z);scene.add(pine);worldColliders.push({x,z,r:.6});}else tree(x,z,d.desert?.65:.72);}}
+ if(d.rocks){for(let i=0;i<d.rocks;i++){const a=i*2.4,r=d.r*.25+(i%3)*2.1,x=d.x+Math.cos(a)*r,z=d.z+Math.sin(a)*r;rock(x,z);}}
+ const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=96;const lc=labelCanvas.getContext('2d');lc.fillStyle='rgba(5,25,34,.78)';lc.roundRect(8,8,496,80,20);lc.fill();lc.font='bold 34px system-ui';lc.textAlign='center';lc.fillStyle='white';lc.fillText(d.name,256,59);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(labelCanvas),transparent:true,depthWrite:false}));label.position.set(d.x,8,d.z);label.scale.set(15,2.8,1);scene.add(label);
+ islandGrounds.push({x:d.x,z:d.z,r:d.r});
+}
+[[-8,-6],[-10,0],[-7,7],[7,-7],[10,-1],[7,7],[0,-10],[12,4],[-12,4]].forEach((p,i)=>tree(p[0],p[1],.8+(i%3)*.13));
+[[-5,-2],[5,-4],[9,5],[-9,5],[2,10]].forEach(p=>rock(...p));
+// Vegetación y fauna de la primera isla
+const animalAnimations=[],parrotAnimations=[],fishAnimations=[];
+function palm(x,z,s=1){
+ const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16*s,.27*s,3.1*s,8),wood);trunk.position.y=1.55*s;trunk.rotation.z=-.12;trunk.castShadow=true;g.add(trunk);
+ for(let i=0;i<7;i++){const a=i*Math.PI*2/7;const fr=new THREE.Mesh(new THREE.ConeGeometry(.22*s,2.0*s,5),i%2?leaf:leaf2);fr.position.set(Math.cos(a)*.82*s,3.05*s,Math.sin(a)*.82*s);fr.rotation.z=-Math.cos(a)*.85;fr.rotation.x=Math.sin(a)*.85;fr.castShadow=true;g.add(fr);}
+ g.position.set(x,.5,z);scene.add(g);worldColliders.push({x,z,r:.48*s});swayObjects.push({obj:g,amp:.035,speed:1.4+Math.random()});
+}
+function shrub(x,z,s=1){const g=new THREE.Group();for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.SphereGeometry(.48*s,8,6),i%2?leaf:leaf2);b.position.set((i-1)*.38*s,.35*s+(i===1?.15*s:0),0);b.castShadow=true;g.add(b);}g.position.set(x,.5,z);scene.add(g);worldColliders.push({x,z,r:.48*s});}
+function fern(x,z,s=1){const g=new THREE.Group();for(let i=0;i<7;i++){const a=i*Math.PI*2/7;const fr=new THREE.Mesh(new THREE.ConeGeometry(.12*s,1.25*s,5),leaf2);fr.position.set(Math.cos(a)*.35*s,.55*s,Math.sin(a)*.35*s);fr.rotation.z=-Math.cos(a)*.8;fr.rotation.x=Math.sin(a)*.8;g.add(fr);}g.position.set(x,.5,z);scene.add(g);worldColliders.push({x,z,r:.34*s});}
+function flower(x,z,color=0xffd65a){const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.42,5),darkgrass);stem.position.set(x,.71,z);scene.add(stem);for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const p=new THREE.Mesh(new THREE.SphereGeometry(.11,6,5),mat(color));p.position.set(x+Math.cos(a)*.13,.94,z+Math.sin(a)*.13);scene.add(p);}const c=new THREE.Mesh(new THREE.SphereGeometry(.07,6,5),mat(0xfff0b0));c.position.set(x,.95,z);scene.add(c);worldColliders.push({x,z,r:.22});}
+function foodPatch(x,z){
+ const g=new THREE.Group(),green=mat(0x397b3e),berry=mat(0xb92f52),gold=mat(0xe5a83b);
+ for(let i=0;i<5;i++){const stem=new THREE.Mesh(new THREE.SphereGeometry(.24,7,6),green);stem.position.set((i-2)*.16,.35,0);stem.scale.set(1,.75,1);g.add(stem);const fruit=new THREE.Mesh(new THREE.SphereGeometry(.105,8,7),i%2?berry:gold);fruit.position.set((i-2)*.17,.48+(i%2)*.08,.18);g.add(fruit);}
+ g.position.set(x,.5,z);scene.add(g);resources.push({type:'food',obj:g,x,z});worldColliders.push({x,z,r:.38,obj:g});
+}
+function boar(x,z){
+ const g=new THREE.Group(),brown=mat(0x68402b),snout=mat(0x9a6a50),dark=mat(0x211b18);
+ const torso=new THREE.Mesh(new THREE.SphereGeometry(.72,10,8),brown);torso.scale.set(1.2,.78,.78);torso.position.y=.78;g.add(torso);
+ const headPivot=new THREE.Group();headPivot.position.set(0,.86,.62);g.add(headPivot);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.43,10,8),brown);head.position.set(0,-.04,.1);headPivot.add(head);
+ const nose=new THREE.Mesh(new THREE.ConeGeometry(.2,.35,8),snout);nose.rotation.x=Math.PI/2;nose.position.set(0,-.14,.43);headPivot.add(nose);
+ const ears=[];for(const sx of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.13,.28,5),brown);ear.position.set(sx*.3,.30,-.04);ear.rotation.z=sx*.35;headPivot.add(ear);ears.push(ear);const eye=new THREE.Mesh(new THREE.SphereGeometry(.055,6,5),dark);eye.position.set(sx*.32,.12,.29);headPivot.add(eye);}
+ const legs=[];for(const sx of [-1,1])for(const zz of [-.42,.48]){const pivot=new THREE.Group();pivot.position.set(sx*.36,.42,zz);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.42,6),dark);leg.position.y=-.19;pivot.add(leg);g.add(pivot);legs.push(pivot);}
+ g.position.set(x,.5,z);g.rotation.y=Math.PI;g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);
+ const collider={x,z,r:.72};worldColliders.push(collider);animalAnimations.push({obj:g,head:headPivot,ears,legs,phase:Math.random()*6.28,homeX:x,homeZ:z,collider,walkSpeed:.48+Math.random()*.22,turn:Math.random()*6.28});
+}
+function parrot(x,y,z){
+ const g=new THREE.Group(),red=mat(0xd94a35),blue=mat(0x247bb5),yellow=mat(0xf0c84a),beak=mat(0xf2a52d);
+ const body=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),red);body.scale.set(.8,1.2,.75);g.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.23,9,7),red);head.position.y=.43;g.add(head);
+ const wings=[];for(const side of [-1,1]){const pivot=new THREE.Group();pivot.position.set(side*.18,.08,0);const wing=new THREE.Mesh(new THREE.SphereGeometry(.22,8,6),blue);wing.position.set(side*.04,-.08,0);wing.scale.set(.45,1,.35);pivot.add(wing);g.add(pivot);wings.push({pivot,side});}
+ const tail=new THREE.Mesh(new THREE.ConeGeometry(.12,.65,6),yellow);tail.position.set(0,-.48,-.12);tail.rotation.x=-.5;g.add(tail);
+ const bk=new THREE.Mesh(new THREE.ConeGeometry(.09,.22,6),beak);bk.rotation.x=Math.PI/2;bk.position.set(0,.4,.2);g.add(bk);
+ g.position.set(x,y,z);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);parrotAnimations.push({obj:g,wings,phase:Math.random()*6.28,baseY:y,homeX:x,homeZ:z,radius:1.15+Math.random()*.8,tail,head});
+}
+function fish(x,z,color=0xf3b84b){
+ const g=new THREE.Group(),fm=mat(color),dark=mat(0x193c48);const body=new THREE.Mesh(new THREE.SphereGeometry(.22,9,7),fm);body.scale.set(1.35,.72,.62);g.add(body);
+ const tailPivot=new THREE.Group();tailPivot.position.x=-.27;const tail=new THREE.Mesh(new THREE.ConeGeometry(.17,.32,5),fm);tail.position.x=-.16;tail.rotation.z=Math.PI/2;tailPivot.add(tail);g.add(tailPivot);
+ const eye=new THREE.Mesh(new THREE.SphereGeometry(.035,6,5),dark);eye.position.set(.18,.07,.12);g.add(eye);
+ g.position.set(x,-.68,z);g.rotation.y=Math.random()*Math.PI*2;scene.add(g);fishAnimations.push({obj:g,tail:tailPivot,phase:Math.random()*6.28,baseX:x,baseZ:z,radius:.75+Math.random()*.55,speed:.65+Math.random()*.35});
+}
+// Palmas en la playa; vegetación baja en los claros de la selva.
+[[-12,-2],[12,-3],[-4,12],[4,-12]].forEach((p,i)=>palm(p[0],p[1],.85+(i%2)*.12));
+[[-8,-3],[-6,4],[6,3],[9,-5],[-2,-9],[3,9]].forEach((p,i)=>shrub(p[0],p[1],.8+(i%3)*.12));
+[[-9,1],[-4,7],[5,7],[8,1],[1,-7]].forEach(p=>fern(...p));
+// Nueva franja de selva: amplía la zona explorable sin llenar de polígonos el iPad.
+for(let i=0;i<26;i++){const a=i*Math.PI*2/26,r=15.8+(i%4)*1.05,x=Math.cos(a)*r,z=Math.sin(a)*r;if(i%3===0)palm(x,z,.78+(i%2)*.08);else tree(x,z,.82+(i%4)*.07);}
+// Nueva zona exterior: bosque denso y una pequeña cadena de montañas para explorar.
+for(let i=0;i<30;i++){const a=i*Math.PI*2/30,r=22.3+(i%4)*1.15,x=Math.cos(a)*r,z=Math.sin(a)*r;if(i%4===0)palm(x,z,.92);else tree(x,z,.88+(i%3)*.12);}
+for(let i=0;i<7;i++){const x=-5+i*1.65,z=-23.5-(i%2)*1.4,h=4.2+(i%3)*.9,r=2.1+(i%3)*.45;const peak=new THREE.Mesh(new THREE.ConeGeometry(r,h,9,3),i%2?cliffMat:cliffDark);peak.position.set(x,1.75,z);peak.rotation.z=(i%2?.12:-.10);peak.rotation.y=i*.37;peak.castShadow=true;peak.receiveShadow=true;scene.add(peak);const foot=new THREE.Mesh(new THREE.DodecahedronGeometry(r*.82,1),i%2?cliffDark:stoneRidge);foot.position.set(x,1.0,z+.55);foot.scale.set(1.45,.72,1.15);foot.castShadow=true;foot.receiveShadow=true;scene.add(foot);}
+// Piedra rúnica antigua: debe llevarse al pedestal de la montaña para abrir la primera mazmorra.
+let hasAncientStone=false,dungeonOpen=false;
+const runeStoneMat=new THREE.MeshStandardMaterial({color:0x7c8b88,roughness:.72,metalness:.12,emissive:0x163d3b,emissiveIntensity:.22});
+const runeStone=new THREE.Group();
+const runeCore=new THREE.Mesh(new THREE.DodecahedronGeometry(.62,1),runeStoneMat);runeCore.scale.set(.82,1.18,.68);runeCore.position.y=.86;runeCore.castShadow=true;runeStone.add(runeCore);
+const runeMark=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,7,24),new THREE.MeshStandardMaterial({color:0x8fe6d4,emissive:0x2c9f8e,emissiveIntensity:.8}));runeMark.position.set(0,1.02,.43);runeMark.rotation.x=.25;runeStone.add(runeMark);runeStone.position.set(9,.58,-10);scene.add(runeStone);
+// Pedestal y sello de piedra frente a la montaña principal.
+const altar=new THREE.Group();const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.22,.55,8),cliffDark);altarBase.position.y=.78;altarBase.castShadow=true;altar.add(altarBase);
+const altarTop=new THREE.Mesh(new THREE.CylinderGeometry(.78,.9,.18,8),stoneRidge);altarTop.position.y=1.12;altarTop.castShadow=true;altar.add(altarTop);
+const socket=new THREE.Mesh(new THREE.CylinderGeometry(.38,.46,.09,8),mat(0x263a3a));socket.position.y=1.25;altar.add(socket);altar.position.set(0,.55,-17.2);scene.add(altar);
+const seal=new THREE.Group();const sealMat=mat(0x394b4b);const sealBlock=new THREE.Mesh(new THREE.BoxGeometry(2.65,3.1,.62),sealMat);sealBlock.position.set(0,1.55,0);sealBlock.castShadow=true;seal.add(sealBlock);
+const sealRune=new THREE.Mesh(new THREE.TorusGeometry(.42,.085,8,28),new THREE.MeshStandardMaterial({color:0x63cfc1,emissive:0x1d8d7e,emissiveIntensity:.42}));sealRune.position.set(0,1.7,.34);seal.add(sealRune);seal.position.set(0,.58,-21.15);scene.add(seal);
+const dungeonGlow=new THREE.PointLight(0x48d8bd,0,13);dungeonGlow.position.set(0,2.2,-22.2);scene.add(dungeonGlow);
+// Relieve nuevo: lomas suaves que rompen la apariencia plana del centro de la isla.
+const hillMat=mat(0x43894a),hillLight=mat(0x579b50);
+for(let i=0;i<9;i++){const a=i*2.399963,r=8.5+(i%3)*2.15,x=Math.cos(a)*r,z=Math.sin(a)*r;const hill=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),i%2?hillMat:hillLight);hill.position.set(x,.48+(i%3)*.12,z);hill.scale.set(3.1+(i%2)*.55,.62+(i%3)*.12,2.5+(i%4)*.28);hill.rotation.y=a;hill.receiveShadow=true;hill.castShadow=true;scene.add(hill);}
+// Vegetación de sotobosque y rocas en los claros: más capas y profundidad visual.
+for(let i=0;i<18;i++){const a=i*2.399963,r=8+(i%6)*1.15,x=Math.cos(a)*r,z=Math.sin(a)*r;if(i%3===0)shrub(x,z,.72+(i%2)*.18);else if(i%3===1)fern(x,z,.72+(i%2)*.18);else flower(x,z,[0xffd65a,0xff8fb1,0xb6a0ff][i%3]);}
+for(let i=0;i<28;i++){const a=i*2.399963,r=18+(i%7)*1.05,x=Math.cos(a)*r,z=Math.sin(a)*r;const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.34+(i%4)*.12,1),i%2?stoneRidge:cliffDark);b.position.set(x,.72,z);b.scale.set(1.45,.82,1.2);b.rotation.set(i*.17,i*.49,i*.21);b.castShadow=true;b.receiveShadow=true;scene.add(b);}
+// Rocas pequeñas en la base de las montañas para romper la silueta geométrica.
+for(let i=0;i<18;i++){const x=-8+(i%9)*2,z=-20.5-Math.floor(i/9)*2.2;const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.42+(i%3)*.16,1),i%2?cliffMat:stoneRidge);b.position.set(x,.83,z);b.scale.set(1.4,.8,1);b.rotation.set(i*.2,i*.7,i*.13);b.castShadow=true;scene.add(b);}
+for(let i=0;i<14;i++){const a=i*Math.PI*2/14,r=23.2+(i%3)*1.2;fern(Math.cos(a)*r,Math.sin(a)*r,.85+(i%3)*.15);}
+// Afloramientos rocosos escalonados y vegetación extra para dar más profundidad visual.
+for(let i=0;i<34;i++){const a=i*2.399963,r=18.5+(i%5)*1.35,x=Math.cos(a)*r,z=Math.sin(a)*r;const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.28+(i%4)*.13,1),i%2?stoneRidge:cliffDark);b.position.set(x,.72+(i%3)*.05,z);b.scale.set(1.55,.72,1.18);b.rotation.set(i*.23,i*.51,i*.17);b.castShadow=true;b.receiveShadow=true;scene.add(b);}
+for(let i=0;i<48;i++){const a=i*2.399963,r=9+(i%13)*1.05,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x,z)<25.5&&i%3===0)flower(x,z,[0xffd65a,0xff8fb1,0xb6a0ff][i%3]);}
+// Capas visuales de alta densidad: hierba, helechos y piedras pequeñas para un aspecto de aventura 3D más rico.
+const tuftGeo=new THREE.ConeGeometry(.11,.62,5);tuftGeo.translate(0,.29,0);const tuftMat=mat(0x286b38);const tufts=new THREE.InstancedMesh(tuftGeo,tuftMat,2100);let tuftN=0;const tuftDummy=new THREE.Object3D();
+for(let i=0;i<2100;i++){const a=i*2.399963,r=3.2+Math.sqrt((i+.5)/2100)*22.3,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r>25.2)continue;if(Math.hypot(x,z)<3.1)continue;tuftDummy.position.set(x,.58,z);tuftDummy.rotation.set(0,(i%17)*.37,(i%5-2)*.07);const sc=.45+(i%9)*.09;tuftDummy.scale.set(sc,sc,sc);tuftDummy.updateMatrix();tufts.setMatrixAt(tuftN++,tuftDummy.matrix);}tufts.count=tuftN;tufts.instanceMatrix.needsUpdate=true;scene.add(tufts);
+// Rocas facetadas con tamaños variados y grupos de matorral para romper los patrones repetidos.
+for(let i=0;i<42;i++){const a=i*2.399963,r=11+(i%8)*1.55,x=Math.cos(a)*r,z=Math.sin(a)*r;const peb=new THREE.Mesh(new THREE.DodecahedronGeometry(.2+(i%4)*.09,1),i%2?rockmat:cliffMat);peb.position.set(x,.62,z);peb.scale.set(1.25,.62,1.05);peb.rotation.set(i*.31,i*.7,i*.22);peb.castShadow=true;peb.receiveShadow=true;scene.add(peb);}
+for(let i=0;i<16;i++){const a=i*2.399963,r=13+(i%5)*1.7,x=Math.cos(a)*r,z=Math.sin(a)*r;shrub(x,z,.62+(i%3)*.12);}
+// Troncos, copas y luces con contraste cinematográfico para dar volumen al bosque.
+const warmFill=new THREE.DirectionalLight(0xffd6a0,.32);warmFill.position.set(22,12,18);scene.add(warmFill);
+
+
+for(let i=0;i<22;i++){const a=i*2.399,r=15.2+(i%5)*1.05,x=Math.cos(a)*r,z=Math.sin(a)*r;if(i%2)shrub(x,z,.78);else fern(x,z,.82);}
+for(let i=0;i<9;i++){const a=i*2.4,r=16.4+(i%3)*1.1;foodPatch(Math.cos(a)*r,Math.sin(a)*r);}
+// Arbustos de bayas y frutos comestibles para la supervivencia.
+[[-3,-4],[4,6],[9,0],[-8,6]].forEach(p=>foodPatch(...p));
+[[-11,2,0xffd65a],[-7,9,0xff8fb1],[6,9,0xffd65a],[10,2,0xb6a0ff],[1,-8,0xff8fb1]].forEach(p=>flower(...p));
+// Fauna con ciclos de movimiento y animación procedural.
+boar(-5,1.5);boar(6,-5.5);parrot(-8,.5,-5);parrot(7,3.3,6);
+// Laguna decorativa dentro de la isla, sin peces para evitar que parezcan estar en el pasto.
+const lagoon=new THREE.Mesh(new THREE.CircleGeometry(3,40),water);lagoon.rotation.x=-Math.PI/2;lagoon.position.set(3,.57,2);scene.add(lagoon);
+// Peces estáticos en el océano, fuera de la costa y sobre la superficie del agua.
+fish(19,2,0xf3b84b);fish(-20,-4,0x55c6d8);fish(5,20,0xe97955);fish(-6,-20,0xf0d15a);
+// shipwreck
+const wreck=new THREE.Group();const hull=new THREE.Mesh(new THREE.BoxGeometry(4,.8,1.5),wood);hull.position.y=.9;hull.rotation.z=-.12;hull.castShadow=true;wreck.add(hull);const mast=new THREE.Mesh(new THREE.CylinderGeometry(.09,.13,4,8),wood);mast.position.set(0,2.9,0);mast.rotation.z=.12;wreck.add(mast);wreck.position.set(-10,.45,-7);wreck.rotation.y=.6;scene.add(wreck);worldColliders.push({x:-10,z:-7,r:2.15});
+// Alex Rivas: modelo de explorador juvenil, con ropa y accesorios unidos al esqueleto.
+const player=new THREE.Group();
+const skinMat=mat(0xc98d63),hairMat=mat(0x302018),jacketMat=mat(0x159f91),jacketLight=mat(0x31c1ae),shirtMat=mat(0x9aa5a3),pantsMat=mat(0x344b50),bootMat=mat(0x392b22),strapMat=mat(0x523927),zipMat=mat(0xd7c28d),eyeMat=mat(0x201915);
+function alexPart(parent,geo,material,x,y,z,sx=1,sy=1,sz=1){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+const body=new THREE.Group();body.position.y=1;player.add(body);
+// Mochila y correas visibles desde atrás y los costados.
+alexPart(body,new THREE.CapsuleGeometry(.245,.36,5,10),strapMat,0,.02,-.31);
+alexPart(body,new THREE.SphereGeometry(.22,12,10),strapMat,0,.34,-.34,1,.52,.62);
+alexPart(body,new THREE.BoxGeometry(.10,.72,.065),strapMat,-.22,.02,.15);
+// Torso con chaqueta turquesa abierta y playera gris al centro.
+alexPart(body,new THREE.CapsuleGeometry(.34,.34,6,12),jacketMat,0,0,0,1.08,1,1.02);
+alexPart(body,new THREE.CapsuleGeometry(.145,.30,5,10),shirtMat,0,.02,.255,1,1,.20);
+alexPart(body,new THREE.CylinderGeometry(.012,.012,.62,8),zipMat,0,.02,.282);
+alexPart(body,new THREE.CapsuleGeometry(.095,.08,4,8),jacketLight,-.23,-.27,.255,1,1,.20);
+alexPart(body,new THREE.CapsuleGeometry(.095,.08,4,8),jacketLight,.23,-.27,.255,1,1,.20);
+alexPart(body,new THREE.BoxGeometry(.76,.13,.49),strapMat,0,-.43,.005);
+alexPart(body,new THREE.SphereGeometry(.055,8,6),zipMat,0,-.43,.275);
+// Cuello y cabeza joven, con flequillo castaño oscuro y rasgos limpios.
+alexPart(player,new THREE.CylinderGeometry(.12,.13,.16,10),skinMat,0,1.48,0);
+const head=new THREE.Group();head.position.set(0,1.76,.015);player.add(head);
+alexPart(head,new THREE.SphereGeometry(.30,18,14),skinMat,0,0,0,1,.98,.92);
+alexPart(head,new THREE.SphereGeometry(.315,20,16),hairMat,0,.145,-.045,1.02,.60,1.0);
+// Mechones separados para conservar la silueta despeinada del diseño de Alex.
+for(let i=0;i<5;i++){const a=-.95+i*.47;alexPart(head,new THREE.ConeGeometry(.105,.27,7),hairMat,Math.sin(a)*.22,.23,Math.cos(a)*.15,1,1,1).rotation.x=-.35;}
+alexPart(head,new THREE.SphereGeometry(.19,12,9),hairMat,0,.105,.205,1.02,.42,.55);
+for(const side of [-1,1]){alexPart(head,new THREE.SphereGeometry(.12,10,8),hairMat,side*.245,-.015,-.005,.72,1.3,.72);alexPart(head,new THREE.SphereGeometry(.028,8,6),eyeMat,side*.105,-.035,.267,1,1,.55);alexPart(head,new THREE.SphereGeometry(.035,8,6),hairMat,side*.10,.07,.265,1,.35,.4);}
+alexPart(head,new THREE.SphereGeometry(.034,8,6),skinMat,0,-.10,.286);
+alexPart(head,new THREE.BoxGeometry(.075,.012,.018),mat(0x754a3a),0,-.19,.255);
+// Brazos articulados con mangas turquesa, manos y piernas de explorador.
+const armPivots=[],legPivots=[];
+for(const side of [-1,1]){
+ const armPivot=new THREE.Group();armPivot.position.set(side*.43,1.34,0);player.add(armPivot);
+ alexPart(armPivot,new THREE.CapsuleGeometry(.115,.43,4,8),jacketMat,0,-.26,0);
+ alexPart(armPivot,new THREE.CapsuleGeometry(.075,.16,3,7),skinMat,0,-.55,.015);
+ armPivots.push(armPivot);
+ const legPivot=new THREE.Group();legPivot.position.set(side*.19,.60,0);player.add(legPivot);
+ alexPart(legPivot,new THREE.CapsuleGeometry(.125,.48,4,8),pantsMat,0,-.27,0);
+ alexPart(legPivot,new THREE.BoxGeometry(.25,.16,.38),bootMat,0,-.54,.085);
+ alexPart(legPivot,new THREE.BoxGeometry(.255,.045,.39),strapMat,0,-.61,.085);
+ legPivots.push(legPivot);
+}
+player.position.set(0,.55,5);scene.add(player);
+let woodCount=0,stoneCount=0,foodCount=0,hunger=100,health=100,gameOver=false,jumpVelocity=0,jumpHeight=0,onGround=true,selected=null,buildMode=false,activeItem="hand",crafted={axe:0,pickaxe:0,spear:0,bow:0},craftStations=[],camAngle=0,camPitch=.36,drag=false,lastX=0,lastY=0,keys={},touchDirs={},messageTimer=0,nearby=null;
+let currentIsland=0;
+window.toggleIslandMap=(show)=>{const el=document.getElementById('islandmap');el.style.display=(show===false||el.style.display==='grid')?'none':'grid';};
+function travelToIsland(id){const d=islandDestinations[id];if(!d)return;currentIsland=id;player.position.set(d.x,.55,d.z+(id===0?5:0));player.rotation.y=0;camAngle=0;document.getElementById('islandmap').style.display='none';document.getElementById('place').textContent=d.name;say('Llegaste a '+d.name+'. '+d.biome+'.');}
+const islandList=document.getElementById('islandlist');for(const d of islandDestinations){const b=document.createElement('button');b.className='islandchoice';b.innerHTML='<span style="font-size:25px">'+d.emoji+'</span><span><strong>'+d.name+'</strong><small>'+d.biome+'</small></span>';b.addEventListener('click',()=>travelToIsland(d.id));islandList.appendChild(b);}
+const msg=document.getElementById('message');function say(t){msg.textContent=t;msg.style.display='block';clearTimeout(messageTimer);messageTimer=setTimeout(()=>msg.style.display='none',2600)}
+function updateHud(){document.getElementById('healthtext').textContent=Math.ceil(health);document.getElementById('healthfill').style.width=health+'%';document.getElementById('healthfill').style.background=health<25?'#b51f2b':health<55?'#e65b42':'linear-gradient(90deg,#e94444,#ff7770)';document.getElementById('wood').textContent=woodCount;document.getElementById('stone').textContent=stoneCount;document.getElementById('food').textContent=foodCount;document.getElementById('hungertext').textContent=Math.ceil(hunger);document.getElementById('hungerfill').style.width=hunger+'%';document.getElementById('hungerfill').style.background=hunger<25?'#df5148':hunger<55?'#e6a23c':'#78c85a';renderInventory();}
+const inventoryItems=[{id:'wood',name:'Madera',icon:'🪵',count:()=>woodCount},{id:'stone',name:'Piedra',icon:'🪨',count:()=>stoneCount},{id:'food',name:'Frutos',icon:'🍓',count:()=>foodCount},{id:'axe',name:'Hacha',icon:'🪓',count:()=>crafted.axe},{id:'pickaxe',name:'Pico',icon:'⛏️',count:()=>crafted.pickaxe},{id:'spear',name:'Lanza',icon:'🔱',count:()=>crafted.spear},{id:'bow',name:'Arco',icon:'🏹',count:()=>crafted.bow},{id:'hand',name:'Manos',icon:'✋',count:()=>1}];
+function renderInventory(){const grid=document.getElementById('invgrid'),bar=document.getElementById('hotbar');if(!grid||!bar)return;grid.innerHTML='';bar.innerHTML='';for(const it of inventoryItems){const n=it.count();const b=document.createElement('button');b.className='invslot'+(activeItem===it.id?' active':'');b.innerHTML='<strong>'+it.icon+'</strong>'+it.name+'<br><b>'+n+'</b>';b.disabled=n<=0;b.onclick=()=>{if(n>0){activeItem=it.id;renderInventory();say('Seleccionaste '+it.name+'.');}};grid.append(b);if(['hand','axe','pickaxe','spear','food'].includes(it.id)){const h=document.createElement('button');h.className='hot'+(activeItem===it.id?' active':'');h.innerHTML='<b>'+it.icon+'</b>'+it.name;h.onclick=()=>{activeItem=it.id;renderInventory();};bar.append(h);}}}
+window.toggleInventory=()=>{const el=document.getElementById('inventory');el.style.display=el.style.display==='block'?'none':'block';renderInventory();};
+function eat(){if(foodCount<=0){say('No tienes comida. Busca arbustos con frutos.');return;}if(hunger>=100){say('No tienes hambre ahora mismo.');return;}foodCount--;hunger=Math.min(100,hunger+30);health=Math.min(100,health+4);updateHud();say('¡Comiste frutos! Hambre +30 y vida +4.');}
+// Hitboxes circulares: Alex no atraviesa vegetación, rocas, fauna terrestre ni construcciones.
+const PLAYER_RADIUS=.38;
+// Colisiones rectangulares por pared: la entrada del refugio queda libre.
+const buildingWalls=[];
+function isBlocked(x,z){
+  // La isla es circular; esta frontera evita caminar sobre el océano.
+  if(!islandDestinations.some(d=>Math.hypot(x-d.x,z-d.z)<d.r-PLAYER_RADIUS))return true;
+  for(const c of worldColliders){if(c.obj&&!c.obj.visible)continue;if(Math.hypot(x-c.x,z-c.z)<c.r+PLAYER_RADIUS)return true;}
+  for(const w of buildingWalls){if(Math.abs(x-w.x)<w.hx+PLAYER_RADIUS && Math.abs(z-w.z)<w.hz+PLAYER_RADIUS)return true;}
+  return false;
+}
+function moveWithCollisions(dx,dz){
+  const px=player.position.x,pz=player.position.z;
+  // Resolver ejes por separado permite deslizarse junto a los objetos.
+  if(!isBlocked(px+dx,pz))player.position.x=px+dx;
+  if(!isBlocked(player.position.x,pz+dz))player.position.z=pz+dz;
+}
+function nearest(){let best=null,d=999;for(const r of resources){if(!r.obj.visible)continue;let q=Math.hypot(player.position.x-r.x,player.position.z-r.z);if(q<2.5&&q<d){best=r;d=q;}}for(const t of craftStations){let q=Math.hypot(player.position.x-t.x,player.position.z-t.z);if(q<2.7&&q<d){best={type:'table'};d=q;}}const rs=Math.hypot(player.position.x-runeStone.position.x,player.position.z-runeStone.position.z);if(!hasAncientStone&&runeStone.visible&&rs<2.8&&rs<d){best={type:'ancientStone'};d=rs;}const ra=Math.hypot(player.position.x-altar.position.x,player.position.z-altar.position.z);if(ra<3.2&&ra<d){best={type:'altar'};d=ra;}if(Math.hypot(player.position.x+10,player.position.z+7)<3)return {type:'wreck'};return best}
+function interact(){if(buildMode&&selected){placeSelected();return;}let n=nearest();if(!n){say('Acércate a un árbol, una roca, la mesa, la piedra antigua o al naufragio.');return;}if(n.type==='table'){openCraft();return;}if(n.type==='ancientStone'){hasAncientStone=true;runeStone.visible=false;say('¡Encontraste la Piedra del Recuerdo! Llévala al pedestal frente a la montaña.');}else if(n.type==='altar'){if(dungeonOpen){say('La entrada de la primera mazmorra ya está abierta.');}else if(hasAncientStone){hasAncientStone=false;dungeonOpen=true;seal.visible=false;dungeonGlow.intensity=2.4;socket.material=mat(0x63d8c4,.35);say('¡La piedra encajó! Se abrió la entrada de la primera mazmorra.');}else{say('El pedestal tiene un hueco. Parece necesitar una piedra antigua.');}}else if(n.type==='tree'){woodCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de madera!');}else if(n.type==='rock'){stoneCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de piedra!');}else if(n.type==='food'){foodCount+=3;n.obj.visible=false;say('¡Recogiste 3 frutos! Comida +3.');}else say('La nota dice: «La isla no aparece en ningún mapa». Encontraste una brújula.');updateHud();}
+let lastAttack=0;
+function attackAnimal(){
+ const now=performance.now();if(now-lastAttack<650)return;lastAttack=now;
+ if(!crafted.spear&&!crafted.axe){say('Necesitas fabricar una lanza o un hacha en la mesa.');return;}
+ const fx=Math.sin(player.rotation.y),fz=Math.cos(player.rotation.y);let target=null,best=2.75;
+ for(const a of animalAnimations){if(!a.obj.visible)continue;const dx=a.obj.position.x-player.position.x,dz=a.obj.position.z-player.position.z,d=Math.hypot(dx,dz);if(d>best)continue;const facing=(dx*fx+dz*fz)/(d||1);if(facing<.15)continue;target=a;best=d;}
+ if(!target){say('No hay ningún animal dentro del alcance. Acércate y míralo de frente.');return;}
+ target.obj.visible=false;const ci=worldColliders.indexOf(target.collider);if(ci>=0)worldColliders.splice(ci,1);
+ foodCount+=2;updateHud();say('¡Conseguiste 2 porciones de comida!');
+}
+
+function toggleBuild(){buildMode=!buildMode;document.getElementById('buildmenu').style.display=buildMode?'flex':'none';say(buildMode?'Elige una construcción y colócala frente a Alex.':'Modo construcción cerrado.');}
+function build(type){if(type==='cancel'){buildMode=false;selected=null;document.getElementById('buildmenu').style.display='none';say('Construcción cancelada.');return;}selected=type;buildMode=true;document.getElementById('buildmenu').style.display='none';let labels={cabin:'refugio',fire:'fogata',chest:'almacén',table:'mesa de fabricación'};if(type==='table'){placeSelected();return;}say('Plano de '+labels[type]+' seleccionado. Acércate a un sitio libre y pulsa E para colocarlo.');}
+function placeSelected(){if(!selected)return;let costs={cabin:[6,3],fire:[2,1],chest:[4,2],table:[5,2]},c=costs[selected];if(woodCount<c[0]||stoneCount<c[1]){say('Materiales insuficientes: necesitas '+c[0]+' madera y '+c[1]+' piedra.');return;}let x=player.position.x-Math.sin(player.rotation.y)*2.8,z=player.position.z-Math.cos(player.rotation.y)*2.8;
+if(Math.hypot(x,z)>(selected==='cabin'?11.8:13.5)){say('Ese lugar está fuera de la zona construible.');return;}
+if(selected==='cabin'){
+ // Refugio ampliado: planta 5.2 x 4.6, paredes altas y techo ancho.
+ const wall=wood,roof=mat(0x75422a),trim=mat(0x39291f),glass=mat(0x8bc8cf);
+ box(x,.64,z,5.2,.22,4.6,trim);
+ box(x,1.85,z-2.18,5.2,2.25,.22,wall);
+ box(x-2.48,1.85,z, .24,2.25,4.6,wall);box(x+2.48,1.85,z,.24,2.25,4.6,wall);
+ // Frente con entrada amplia al centro.
+ box(x-1.92,1.85,z+2.18,1.36,2.25,.22,wall);box(x+1.92,1.85,z+2.18,1.36,2.25,.22,wall);
+ box(x,2.85,z+2.18,2.5,.28,.22,wall);
+ // Techo de dos faldones.
+ const roofA=box(x-1.28,3.12,z,2.95,.24,5.05,roof);roofA.rotation.z=-.22;
+ const roofB=box(x+1.28,3.12,z,2.95,.24,5.05,roof);roofB.rotation.z=.22;
+ // Ventanas frontales y marco de la puerta. La abertura central queda libre.
+ box(x-1.55,1.95,z+2.31,.72,.78,.06,glass);box(x+1.55,1.95,z+2.31,.72,.78,.06,glass);
+ box(x-0.72,1.35,z+2.32,.12,1.5,.08,trim);box(x+0.72,1.35,z+2.32,.12,1.5,.08,trim);
+ // Colisiones solo en los tramos reales de pared; nunca en el hueco de la puerta.
+ buildingWalls.push(
+  {x:x,z:z-2.18,hx:2.6,hz:.11},
+  {x:x-2.48,z:z,hx:.12,hz:2.3}, {x:x+2.48,z:z,hx:.12,hz:2.3},
+  {x:x-1.92,z:z+2.18,hx:.68,hz:.11}, {x:x+1.92,z:z+2.18,hx:.68,hz:.11}
+ );
+ // Interior sencillo: cama, mesita y luz cálida para que se note que ya es habitable.
+ box(x-1.15,.82,z-.65,1.35,.24,2.0,mat(0x8b5a38));
+ box(x-1.15,1.02,z-.65,1.28,.18,1.15,mat(0xd8c7a6));
+ box(x+1.05,.95,z-.85,.75,.65,.65,trim);
+ const lamp=new THREE.PointLight(0xffd59a,1.15,8);lamp.position.set(x,.0+2.25,z);scene.add(lamp);
+}
+if(selected==='table'){
+ const top=mat(0x956039),legs=mat(0x57351f),metal=mat(0x9aa4a4);
+ box(x,.95,z,2.0,.22,1.25,top);
+ for(const dx of [-.82,.82])for(const dz of [-.45,.45])box(x+dx,.48,z+dz,.16,.9,.16,legs);
+ box(x+.45,1.16,z-.12,.42,.08,.12,metal);
+ const hammerHead=box(x+.45,1.24,z-.12,.32,.12,.18,metal);hammerHead.rotation.z=.12;
+ craftStations.push({x,z});worldColliders.push({x,z,r:1.05});
+}
+if(selected==='fire'){let base=new THREE.Mesh(new THREE.CylinderGeometry(.65,.75,.18,10),rockmat);base.position.set(x,.62,z);scene.add(base);for(let i=0;i<5;i++){let log=box(x-.35+i*.17,.78,z,.85,.13,.13,wood);log.rotation.y=i*.5;}let flame=new THREE.Mesh(new THREE.ConeGeometry(.32,.9,8),new THREE.MeshBasicMaterial({color:0xff8b20}));flame.position.set(x,1.15,z);scene.add(flame);}
+if(selected==='chest'){box(x,.85,z,1.3,.7,1,wood);box(x,1.25,z,1.35,.2,1.05,mat(0xb27a36));box(x,1.05,z+.52,.12,.25,.04,mat(0xd9b45a));}
+if(selected!=='cabin'&&selected!=='table')worldColliders.push({x,z,r:selected==='fire'?.82:.9});woodCount-=c[0];stoneCount-=c[1];updateHud();say(selected==='cabin'?'¡Refugio listo! La puerta está libre: entra caminando por el frente.':'¡Construcción terminada!');selected=null;buildMode=false;}
+const recipes=[
+ {id:'axe',name:'🪓 Hacha de piedra',cost:[3,2],desc:'Herramienta para conseguir madera.'},
+ {id:'pickaxe',name:'⛏️ Pico de piedra',cost:[3,3],desc:'Herramienta para extraer piedra.'},
+ {id:'spear',name:'🔱 Lanza de madera',cost:[4,1],desc:'Arma básica de exploración.'},
+ {id:'bow',name:'🏹 Arco sencillo',cost:[5,1],desc:'Arma a distancia (requiere flechas en una mejora futura).'}
+];
+function openCraft(){const menu=document.getElementById('craftmenu');menu.style.display='block';renderRecipes();say('Mesa de fabricación abierta.');}
+function closeCraft(){document.getElementById('craftmenu').style.display='none';}
+function renderRecipes(){const root=document.getElementById('recipes');root.innerHTML='';for(const r of recipes){const have=woodCount>=r.cost[0]&&stoneCount>=r.cost[1];const row=document.createElement('div');row.className='recipe';const info=document.createElement('div');info.innerHTML='<b>'+r.name+'</b><br><span>'+r.desc+'</span><br><small>Necesitas: '+r.cost[0]+' 🪵 y '+r.cost[1]+' 🪨 · Tienes: '+(crafted[r.id]||0)+'</small>';const btn=document.createElement('button');btn.textContent='Fabricar';btn.disabled=!have;btn.onclick=()=>craft(r);row.append(info,btn);root.append(row);}}
+function craft(r){if(woodCount<r.cost[0]||stoneCount<r.cost[1]){say('No tienes materiales suficientes.');return;}woodCount-=r.cost[0];stoneCount-=r.cost[1];crafted[r.id]=(crafted[r.id]||0)+1;updateHud();renderRecipes();say('¡Fabricaste: '+r.name+'!');renderInventory();}
+document.getElementById('closecraft').onclick=closeCraft;renderInventory();
+document.querySelectorAll('.build').forEach(b=>b.addEventListener('click',()=>build(b.dataset.build)));
+function jump(){if(!onGround||gameOver)return;jumpVelocity=7.2;onGround=false;say('¡Salto!');}
+function keydown(e){let k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();keys[k]=true;if(k===' '||k==='arrowup'&&e.repeat===false&&e.shiftKey)jump();if(k==='e')interact();if(k==='g')attackAnimal();if(k==='f')eat();if(k==='i')window.toggleInventory();if(k==='b')toggleBuild();if(k==='escape')closeCraft();if(k==='1')build('cabin');if(k==='2')build('fire');if(k==='3')build('chest');}
+addEventListener('keydown',keydown);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+// Joystick analógico: movimiento continuo en 360 grados para pantallas táctiles.
+const joy=document.getElementById('touch'),joyKnob=document.getElementById('joystickKnob');let joyX=0,joyY=0,joyPointer=null;
+function updateJoystick(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,max=43,len=Math.hypot(dx,dy),scale=len>max?max/len:1;joyX=dx*scale/max;joyY=dy*scale/max;joyKnob.style.transform=`translate(${dx*scale}px,${dy*scale}px)`;}
+joy.addEventListener('pointerdown',e=>{e.preventDefault();joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);updateJoystick(e)});
+joy.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)updateJoystick(e)});
+function releaseJoystick(e){if(e.pointerId!==joyPointer)return;joyPointer=null;joyX=0;joyY=0;joyKnob.style.transform='translate(0px,0px)'}
+joy.addEventListener('pointerup',releaseJoystick);joy.addEventListener('pointercancel',releaseJoystick);joy.addEventListener('lostpointercapture',releaseJoystick);
+document.getElementById('jump').onclick=jump;document.getElementById('interact').onclick=interact;document.getElementById('eat').onclick=eat;document.getElementById('build').onclick=toggleBuild;document.getElementById('attack').onclick=attackAnimal;
+const canvas=renderer.domElement;canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!drag)return;camAngle-=(e.clientX-lastX)*.006;camPitch=Math.max(.15,Math.min(.8,camPitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY});canvas.addEventListener('pointerup',()=>drag=false);canvas.addEventListener('pointercancel',()=>drag=false);
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);
+let last=performance.now();function animate(now){requestAnimationFrame(animate);let dt=Math.min((now-last)/1000,.04);last=now;
+let f=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,r=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX;
+let forward=new THREE.Vector3(-Math.sin(camAngle),0,-Math.cos(camAngle)),right=new THREE.Vector3(Math.cos(camAngle),0,-Math.sin(camAngle)),move=forward.multiplyScalar(f).add(right.multiplyScalar(r));if(move.length()>0){move.normalize();moveWithCollisions(move.x*dt*5,move.z*dt*5);player.rotation.y=Math.atan2(move.x,move.z);}
+if(!onGround){jumpVelocity-=18*dt;jumpHeight+=jumpVelocity*dt;if(jumpHeight<=0){jumpHeight=0;jumpVelocity=0;onGround=true;}}player.position.y=.55+jumpHeight;
+const t=now*.001;const moving=move.length()>0;const stride=moving?Math.sin(now*.012)*.62:0;for(let i=0;i<2;i++){legPivots[i].rotation.x=stride*(i===0?1:-1);armPivots[i].rotation.x=-stride*(i===0?1:-1)*.72;}body.position.y=1+(moving?Math.abs(Math.sin(now*.012))*.045:Math.sin(now*.002)*.012);head.position.y=1.72+(moving?Math.abs(Math.sin(now*.012))*.035:0);
+for(const a of animalAnimations){
+ if(!a.obj.visible)continue;
+ const phase=t*a.walkSpeed+a.phase, gait=Math.sin(phase*7.5), drift=Math.sin(phase*.42)*.95;
+ const oldX=a.obj.position.x,oldZ=a.obj.position.z;
+ a.obj.position.x=a.homeX+drift; a.obj.position.z=a.homeZ+Math.cos(phase*.42)*.72;
+ a.obj.position.y=.5+Math.abs(Math.sin(phase*7.5))*.045;
+ a.obj.rotation.y=Math.atan2(a.obj.position.x-oldX,a.obj.position.z-oldZ);
+ a.obj.rotation.z=Math.sin(phase*7.5)*.035;
+ a.head.rotation.x=Math.sin(t*2.8+a.phase)*.16;
+ for(let i=0;i<a.legs.length;i++)a.legs[i].rotation.x=gait*(i===0||i===3?1:-1)*.68;
+ for(let i=0;i<a.ears.length;i++)a.ears[i].rotation.z=(i===0?-1:1)*(.28+Math.sin(t*4+a.phase)*.12);
+ a.collider.x=a.obj.position.x;a.collider.z=a.obj.position.z;
+ }
+ for(const a of parrotAnimations){
+ const phase=t*.72+a.phase, flap=Math.sin(t*13+a.phase)*1.05;
+ for(const w of a.wings){w.pivot.rotation.z=flap*w.side;w.pivot.rotation.x=Math.cos(t*13+a.phase)*.18;}
+ a.obj.position.x=a.homeX+Math.sin(phase)*a.radius;
+ a.obj.position.z=a.homeZ+Math.cos(phase)*a.radius*.7;
+ a.obj.position.y=a.baseY+Math.sin(t*3+a.phase)*.28;
+ a.obj.rotation.y=Math.atan2(Math.cos(phase)*a.radius,-Math.sin(phase)*a.radius*.7);
+ a.obj.rotation.z=Math.sin(t*13+a.phase)*.08;
+ a.tail.rotation.x=-.5+Math.sin(t*5+a.phase)*.12;
+ }
+ for(const a of fishAnimations){
+ const phase=t*a.speed+a.phase;
+ a.obj.position.x=a.baseX+Math.sin(phase)*a.radius;
+ a.obj.position.z=a.baseZ+Math.cos(phase)*a.radius*.72;
+ a.obj.position.y=-.68+Math.sin(t*3+a.phase)*.045;
+ a.obj.rotation.y=Math.atan2(Math.cos(phase)*a.radius,-Math.sin(phase)*a.radius*.72);
+ a.tail.rotation.y=Math.sin(t*15+a.phase)*.72;
+ a.obj.rotation.z=Math.sin(t*5+a.phase)*.06;
+ }
+hunger=Math.max(0,hunger-dt*.035);if(hunger<=0&&!gameOver){health=Math.max(0,health-dt*1.1);if(health<=0){gameOver=true;say('Alex se quedó sin fuerzas. Busca comida para mantenerte.');}}else if(hunger>80&&health<100){health=Math.min(100,health+dt*.12);}if(Math.floor(now/500)!==Math.floor((now-dt*1000)/500))updateHud();
+// Olas suaves con desplazamiento de vértices de baja resolución.
+const waterPos=oceanGeo.attributes.position;for(let i=0;i<waterPos.count;i++){const x=oceanBase[i*3],y=oceanBase[i*3+1];waterPos.setZ(i,oceanBase[i*3+2]+Math.sin(x*.075+t*1.25)*.075+Math.cos(y*.09+t*.9)*.055);}waterPos.needsUpdate=true;oceanGeo.computeVertexNormals();
+for(const sw of swayObjects){sw.obj.rotation.z=Math.sin(t*sw.speed)*sw.amp;sw.obj.rotation.x=Math.cos(t*sw.speed*.8)*sw.amp*.45;}
+shoreFoam.rotation.z=Math.sin(t*.22)*.012;shoreFoam.material.opacity=.40+.07*Math.sin(t*1.3);
+water.roughness=.22;water.metalness=.16;water.color.setHSL(.52,.88,.48+.035*Math.sin(t*1.5));
+let offset=new THREE.Vector3(Math.sin(camAngle)*15.5,7.2+camPitch*4,Math.cos(camAngle)*15.5);camera.position.copy(player.position).add(offset);camera.lookAt(player.position.x,player.position.y+1,player.position.z);
+const dir=((player.rotation.y%(Math.PI*2))+Math.PI*2)%(Math.PI*2);document.getElementById('needle').style.transform='translateX(-50%) rotate('+(-dir)+'rad)';const dirs=['SUR','SO','OESTE','NO','NORTE','NE','ESTE','SE'];document.getElementById('heading').textContent=dirs[Math.round(dir/(Math.PI/4))%8];const active=islandDestinations.find(d=>Math.hypot(player.position.x-d.x,player.position.z-d.z)<d.r+1);document.getElementById('place').textContent=active?active.name:'Mar abierto';
+renderer.render(scene,camera);}
+requestAnimationFrame(animate);loading.style.display='none';updateHud();say('Alex está listo. Explora, recolecta materiales y construye.');
+}catch(err){loadmsg.textContent='Error al iniciar: '+err.message;console.error('IDO init error',err);}
+}
+loadThreeAndStart();
+</script>
+</body></html>
