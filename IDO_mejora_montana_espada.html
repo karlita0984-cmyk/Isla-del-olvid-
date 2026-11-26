@@ -242,8 +242,40 @@ const runeLine=new THREE.Mesh(new THREE.BoxGeometry(.075,1.65,.035),ancientRuneM
 // La espada nace desde la roca de la cumbre; su empuñadura queda parcialmente incrustada.
 summitSword.position.set(0,11.7,0);
 mainMountain.add(summitSword);
-// Colisión sólida alrededor del pie de la montaña: Alex no puede atravesarla.
-worldColliders.push({x:0,z:-23.2,r:11.6});
+// Sendero ascendente en zigzag: una rampa continua que Alex puede recorrer a pie.
+const mountainPathCurve=new THREE.CatmullRomCurve3([
+ new THREE.Vector3(0,.72,12.4),new THREE.Vector3(4.2,1.7,10.3),
+ new THREE.Vector3(7.1,3.0,6.0),new THREE.Vector3(7.0,4.5,.8),
+ new THREE.Vector3(3.4,6.1,-3.8),new THREE.Vector3(-2.7,7.8,-5.8),
+ new THREE.Vector3(-6.3,9.5,-2.4),new THREE.Vector3(-6.0,11.0,3.0),
+ new THREE.Vector3(-3.0,12.5,5.0),new THREE.Vector3(0,14.0,0)
+],false,'catmullrom',.22);
+const mountainPathSamples=mountainPathCurve.getPoints(180);
+const pathPositions=[],pathIndices=[];
+for(let i=0;i<mountainPathSamples.length;i++){
+ const p=mountainPathSamples[i],tangent=mountainPathCurve.getTangent(i/(mountainPathSamples.length-1));
+ const side=new THREE.Vector3(-tangent.z,0,tangent.x).normalize().multiplyScalar(1.9);
+ pathPositions.push(p.x+side.x,p.y+.18,p.z+side.z,p.x-side.x,p.y+.18,p.z-side.z);
+ if(i<mountainPathSamples.length-1){const a=i*2;pathIndices.push(a,a+1,a+2,a+1,a+3,a+2);}
+}
+const mountainPathGeo=new THREE.BufferGeometry();
+mountainPathGeo.setAttribute('position',new THREE.Float32BufferAttribute(pathPositions,3));
+mountainPathGeo.setIndex(pathIndices);mountainPathGeo.computeVertexNormals();
+const mountainPathMesh=new THREE.Mesh(mountainPathGeo,new THREE.MeshStandardMaterial({color:0x858078,roughness:.96,metalness:.02,side:THREE.DoubleSide}));
+mountainPathMesh.receiveShadow=true;mountainPathMesh.castShadow=true;mainMountain.add(mountainPathMesh);
+// La espada queda hundida en la roca de la cima, no flotando sobre ella.
+summitSword.position.set(0,11.7,0);
+// La montaña usa una colisión con forma propia y deja libre únicamente el sendero.
+function mountainPathInfo(x,z){
+ const lx=x,zl=z+23.2;let best=Infinity,bestY=null;
+ for(let i=0;i<mountainPathSamples.length-1;i++){
+  const a=mountainPathSamples[i],b=mountainPathSamples[i+1],vx=b.x-a.x,vz=b.z-a.z;
+  const t=Math.max(0,Math.min(1,((lx-a.x)*vx+(zl-a.z)*vz)/(vx*vx+vz*vz||1)));
+  const qx=a.x+vx*t,qz=a.z+vz*t,d=Math.hypot(lx-qx,zl-qz);
+  if(d<best){best=d;bestY=a.y+(b.y-a.y)*t;}
+ }
+ return {distance:best,height:bestY};
+}
 let ancientSwordDiscovered=false;
 // Piedra rúnica antigua: debe llevarse al pedestal de la montaña para abrir la primera mazmorra.
 let hasAncientStone=false,dungeonOpen=false;
@@ -353,7 +385,12 @@ const buildingWalls=[];
 function isBlocked(x,z){
   // La isla es circular; esta frontera evita caminar sobre el océano.
   if(!islandDestinations.some(d=>Math.hypot(x-d.x,z-d.z)<d.r-PLAYER_RADIUS))return true;
-  for(const c of worldColliders){if(c.obj&&!c.obj.visible)continue;if(Math.hypot(x-c.x,z-c.z)<c.r+PLAYER_RADIUS)return true;}
+  // El macizo bloquea el paso salvo en la franja transitable del sendero.
+  const mx=x,mz=z+23.2,inside=(mx*mx)/(12.8*12.8)+(mz*mz)/(11.2*11.2)<1.08;
+  const onMountainTrail=mountainPathInfo(x,z).distance<2.05;
+  if(inside&&!onMountainTrail)return true;
+  // Mantener el sendero despejado aunque cruce la franja de árboles exterior.
+  if(!onMountainTrail)for(const c of worldColliders){if(c.obj&&!c.obj.visible)continue;if(Math.hypot(x-c.x,z-c.z)<c.r+PLAYER_RADIUS)return true;}
   for(const w of buildingWalls){if(Math.abs(x-w.x)<w.hx+PLAYER_RADIUS && Math.abs(z-w.z)<w.hz+PLAYER_RADIUS)return true;}
   return false;
 }
@@ -363,7 +400,7 @@ function moveWithCollisions(dx,dz){
   if(!isBlocked(px+dx,pz))player.position.x=px+dx;
   if(!isBlocked(player.position.x,pz+dz))player.position.z=pz+dz;
 }
-function nearest(){let best=null,d=999;for(const r of resources){if(!r.obj.visible)continue;let q=Math.hypot(player.position.x-r.x,player.position.z-r.z);if(q<2.5&&q<d){best=r;d=q;}}for(const t of craftStations){let q=Math.hypot(player.position.x-t.x,player.position.z-t.z);if(q<2.7&&q<d){best={type:'table'};d=q;}}const rs=Math.hypot(player.position.x-runeStone.position.x,player.position.z-runeStone.position.z);if(!hasAncientStone&&runeStone.visible&&rs<2.8&&rs<d){best={type:'ancientStone'};d=rs;}const rsword=Math.hypot(player.position.x,player.position.z+23.2);if(rsword<14.2&&rsword<d){best={type:'summitSword'};d=rsword;}const ra=Math.hypot(player.position.x-altar.position.x,player.position.z-altar.position.z);if(ra<3.2&&ra<d){best={type:'altar'};d=ra;}if(Math.hypot(player.position.x+10,player.position.z+7)<3)return {type:'wreck'};return best}
+function nearest(){let best=null,d=999;for(const r of resources){if(!r.obj.visible)continue;let q=Math.hypot(player.position.x-r.x,player.position.z-r.z);if(q<2.5&&q<d){best=r;d=q;}}for(const t of craftStations){let q=Math.hypot(player.position.x-t.x,player.position.z-t.z);if(q<2.7&&q<d){best={type:'table'};d=q;}}const rs=Math.hypot(player.position.x-runeStone.position.x,player.position.z-runeStone.position.z);if(!hasAncientStone&&runeStone.visible&&rs<2.8&&rs<d){best={type:'ancientStone'};d=rs;}const rsword=Math.hypot(player.position.x,player.position.z+23.2);if(rsword<3.1&&Math.abs(player.position.y-14.0)<3.4&&rsword<d){best={type:'summitSword'};d=rsword;}const ra=Math.hypot(player.position.x-altar.position.x,player.position.z-altar.position.z);if(ra<3.2&&ra<d){best={type:'altar'};d=ra;}if(Math.hypot(player.position.x+10,player.position.z+7)<3)return {type:'wreck'};return best}
 function interact(){if(buildMode&&selected){placeSelected();return;}let n=nearest();if(!n){say('Acércate a un árbol, una roca, la mesa, la piedra antigua o al naufragio.');return;}if(n.type==='table'){openCraft();return;}if(n.type==='summitSword'){if(!ancientSwordDiscovered){ancientSwordDiscovered=true;say('La Espada del Olvido está incrustada en la cumbre. Su piedra antigua no se parece a ninguna espada fabricada. Aún no puedes extraerla.');}else{say('La Espada del Olvido sigue firmemente incrustada en la cumbre.');}}else if(n.type==='ancientStone'){hasAncientStone=true;runeStone.visible=false;say('¡Encontraste la Piedra del Recuerdo! Llévala al pedestal frente a la montaña.');}else if(n.type==='altar'){if(dungeonOpen){say('La entrada de la primera mazmorra ya está abierta.');}else if(hasAncientStone){hasAncientStone=false;dungeonOpen=true;seal.visible=false;dungeonGlow.intensity=2.4;socket.material=mat(0x63d8c4,.35);say('¡La piedra encajó! Se abrió la entrada de la primera mazmorra.');}else{say('El pedestal tiene un hueco. Parece necesitar una piedra antigua.');}}else if(n.type==='tree'){woodCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de madera!');}else if(n.type==='rock'){stoneCount+=2;n.obj.visible=false;say('¡Recolectaste 2 de piedra!');}else if(n.type==='food'){foodCount+=3;n.obj.visible=false;say('¡Recogiste 3 frutos! Comida +3.');}else say('La nota dice: «La isla no aparece en ningún mapa». Encontraste una brújula.');updateHud();}
 let lastAttack=0;
 function attackAnimal(){
@@ -446,7 +483,7 @@ function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMa
 let last=performance.now();function animate(now){requestAnimationFrame(animate);let dt=Math.min((now-last)/1000,.04);last=now;
 let f=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joyY,r=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joyX;
 let forward=new THREE.Vector3(-Math.sin(camAngle),0,-Math.cos(camAngle)),right=new THREE.Vector3(Math.cos(camAngle),0,-Math.sin(camAngle)),move=forward.multiplyScalar(f).add(right.multiplyScalar(r));if(move.length()>0){move.normalize();moveWithCollisions(move.x*dt*5,move.z*dt*5);player.rotation.y=Math.atan2(move.x,move.z);}
-if(!onGround){jumpVelocity-=18*dt;jumpHeight+=jumpVelocity*dt;if(jumpHeight<=0){jumpHeight=0;jumpVelocity=0;onGround=true;}}player.position.y=.55+jumpHeight;
+if(!onGround){jumpVelocity-=18*dt;jumpHeight+=jumpVelocity*dt;if(jumpHeight<=0){jumpHeight=0;jumpVelocity=0;onGround=true;}}const mountainGround=mountainPathInfo(player.position.x,player.position.z);const onMountainPath=mountainGround.distance<2.05;player.position.y=(onMountainPath?mountainGround.height:.55)+jumpHeight;
 const t=now*.001;const moving=move.length()>0;const stride=moving?Math.sin(now*.012)*.62:0;for(let i=0;i<2;i++){legPivots[i].rotation.x=stride*(i===0?1:-1);armPivots[i].rotation.x=-stride*(i===0?1:-1)*.72;}body.position.y=1+(moving?Math.abs(Math.sin(now*.012))*.045:Math.sin(now*.002)*.012);head.position.y=1.72+(moving?Math.abs(Math.sin(now*.012))*.035:0);
 for(const a of animalAnimations){
  if(!a.obj.visible)continue;
