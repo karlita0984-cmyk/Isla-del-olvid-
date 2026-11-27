@@ -53,7 +53,7 @@
 #actions #eat{grid-column:1;grid-row:2;background:linear-gradient(145deg,#b98a4b,#69401e);border-color:#f8d79a}
 #actions #build{grid-column:2;grid-row:2;background:linear-gradient(145deg,#8b79bb,#403566);border-color:#d7c9ff}
 #combatPair{display:contents}
-#actions #jump{grid-column:3;grid-row:1;width:68px;height:68px;font-size:12px;background:linear-gradient(145deg,#55c4dc,#12617c);border:3px solid #c8f6ff}
+#actions #jump{grid-column:3;grid-row:1;width:68px;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:radial-gradient(circle at 35% 28%,#398bd0,#123d78 68%,#071b3c);border:3px solid #8bc8ff;box-shadow:inset 0 2px 7px #ffffff55,inset 0 -6px 9px #0008,0 0 0 3px #142d54,0 4px 10px #000a}#actions #jump .ps-symbol{font-size:31px;line-height:1;font-weight:900;color:#eaf5ff;text-shadow:0 2px 3px #06152d}#actions #jump small{font-size:8px;line-height:1.1;letter-spacing:.5px;color:#fff}
 #actions #attack{grid-column:3;grid-row:2;width:60px;height:60px;background:linear-gradient(145deg,#d46c59,#792d2d);border-color:#ffc1a8}
 
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(#163d50,#0a202c);z-index:5;text-align:center;padding:25px}
@@ -94,7 +94,7 @@
 <div id="touch" aria-label="Joystick de movimiento">
  <div id="joystickBase"><div id="joystickKnob"></div></div>
 </div>
-<div id="actions" aria-label="Controles del juego"><button class="touchbtn" id="interact" aria-label="Usar">✋<br>USAR</button><button class="touchbtn" id="eat" aria-label="Comer">🍎<br>COMER</button><button class="touchbtn" id="build" aria-label="Construir">🛠️<br>ARMAR</button><span id="combatPair"><button class="touchbtn" id="attack" aria-label="Atacar">⚔️<br>ATACAR</button><button class="touchbtn" id="jump" aria-label="Saltar">⬆️<br>SALTAR</button></span></div>
+<div id="actions" aria-label="Controles del juego"><button class="touchbtn" id="interact" aria-label="Usar">USAR</button><button class="touchbtn" id="eat" aria-label="Comer">COMER</button><button class="touchbtn" id="build" aria-label="Construir">ARMAR</button><span id="combatPair"><button class="touchbtn" id="attack" aria-label="Atacar">ATACAR</button><button class="touchbtn" id="jump" aria-label="Saltar"><span class="ps-symbol">✕</span><small>SALTAR</small></button></span></div>
 <script>
 function loadThreeAndStart(){
  const loading=document.getElementById('loading'),loadmsg=document.getElementById('loadmsg');
