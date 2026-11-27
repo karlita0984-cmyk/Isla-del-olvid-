@@ -72,23 +72,23 @@
 <div id="loading"><div><h2>🏝️ Isla del Olvido</h2><div>Preparando la isla en 3D…</div><small id="loadmsg">Cargando motor gráfico</small></div></div>
 <canvas id="game"></canvas>
 <div id="hud">
- <div class="panel" id="stats"><div id="healthrow">❤️ Vida: <span id="healthtext">100</span>% <span id="healthbar"><span id="healthfill"></span></span></div>🪵 Madera: <b id="wood">0</b><br>🪨 Piedra: <b id="stone">0</b><br>🍓 Comida: <b id="food">0</b><br>🍗 Hambre: <span id="hungertext">100</span>% <span id="hungerbar"><span id="hungerfill"></span></span><br>📍 <span id="place">Playa del naufragio</span></div>
+ <div class="panel" id="stats"><div id="healthrow">VIDA: <span id="healthtext">100</span>% <span id="healthbar"><span id="healthfill"></span></span></div>MADERA: <b id="wood">0</b><br>PIEDRA: <b id="stone">0</b><br>COMIDA: <b id="food">0</b><br>HAMBRE: <span id="hungertext">100</span>% <span id="hungerbar"><span id="hungerfill"></span></span><br>ZONA: <span id="place">Playa del naufragio</span></div>
  <div class="panel" id="help">WASD / flechas: moverse<br>E: interactuar / recolectar · G: acción<br>F: comer · B: construir · 1/2/3: edificios<br>Arrastra para girar la cámara</div>
 </div>
 <div id="compass" aria-label="Brújula"><div class="rose">N<span id="needle"></span><small id="heading">NORTE</small></div></div>
-<button id="mapbtn" onclick="window.toggleIslandMap()">🧭 Mapa · 7 islas</button>
-<div id="islandmap"><div id="mapcard"><h2>🗺️ Archipiélago del Olvido</h2><p>Elige una isla para viajar. Cada territorio guarda un paisaje y recursos distintos.</p><div id="islandlist"></div><button class="build" onclick="window.toggleIslandMap(false)" style="margin-top:12px;width:100%">Cerrar mapa</button></div></div>
-<button id="bagbtn" onclick="window.toggleInventory()">🎒 Mochila</button>
-<div id="inventory"><h2>🎒 Inventario de Alex</h2><p>Materiales, comida y equipo que llevas contigo.</p><div id="invgrid"></div><button class="build" onclick="window.toggleInventory()" style="margin-top:12px;width:100%">Cerrar inventario</button></div>
+<button id="mapbtn" onclick="window.toggleIslandMap()">MAPA · 7 ISLAS</button>
+<div id="islandmap"><div id="mapcard"><h2>ARCHIPIÉLAGO DEL OLVIDO</h2><p>Elige una isla para viajar. Cada territorio guarda un paisaje y recursos distintos.</p><div id="islandlist"></div><button class="build" onclick="window.toggleIslandMap(false)" style="margin-top:12px;width:100%">Cerrar mapa</button></div></div>
+<button id="bagbtn" onclick="window.toggleInventory()">MOCHILA</button>
+<div id="inventory"><h2>INVENTARIO DE ALEX</h2><p>Materiales, comida y equipo que llevas contigo.</p><div id="invgrid"></div><button class="build" onclick="window.toggleInventory()" style="margin-top:12px;width:100%">Cerrar inventario</button></div>
 <div id="hotbar"></div>
 <div id="message"></div>
-<div id="craftmenu"><h2>🛠️ Mesa de fabricación</h2><p>Fabrica equipo usando los materiales que has recolectado.</p>
+<div id="craftmenu"><h2>MESA DE FABRICACIÓN</h2><p>Fabrica equipo usando los materiales que has recolectado.</p>
  <div id="recipes"></div><button class="build" id="closecraft">Cerrar</button></div>
 <div id="buildmenu">
- <button class="build" data-build="cabin">🏠 Refugio · 6🪵 3🪨</button>
- <button class="build" data-build="fire">🔥 Fogata · 2🪵 1🪨</button>
- <button class="build" data-build="chest">📦 Almacén · 4🪵 2🪨</button>
- <button class="build" data-build="table">🛠️ Mesa de fabricación · 5🪵 2🪨</button>
+ <button class="build" data-build="cabin">REFUGIO · 6 madera · 3 piedra</button>
+ <button class="build" data-build="fire">FOGATA · 2 madera · 1 piedra</button>
+ <button class="build" data-build="chest">ALMACÉN · 4 madera · 2 piedra</button>
+ <button class="build" data-build="table">MESA DE FABRICACIÓN · 5 madera · 2 piedra</button>
  <button class="build" data-build="cancel">✕ Cerrar</button>
 </div>
 <div id="touch" aria-label="Joystick de movimiento">
