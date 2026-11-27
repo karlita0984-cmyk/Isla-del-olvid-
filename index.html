@@ -59,7 +59,7 @@
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(#163d50,#0a202c);z-index:5;text-align:center;padding:25px}
 #loading small{display:block;opacity:.8;margin-top:8px}
 @media(max-width:520px){#compass{width:64px;height:64px;top:10px;right:10px}#compass .rose{width:46px;height:46px}#needle{height:32px;transform-origin:50% 17px}#mapbtn{top:82px;right:10px;padding:8px 10px}#bagbtn{top:128px;right:10px}#islandlist{grid-template-columns:1fr 1fr}.islandchoice{padding:8px;min-height:62px}}
-@media(pointer:coarse){#touch,#actions{display:flex}#help{display:none}
+@media(pointer:coarse){#touch{display:flex}#actions{display:grid}#help{display:none}
 /* En pantallas táctiles, la barra se coloca por encima de los controles. */
 #hotbar{top:118px;bottom:auto;left:50%;transform:translateX(-50%);width:min(88vw,440px);max-width:calc(100vw - 24px);overflow-x:auto;overflow-y:hidden;justify-content:flex-start;padding:4px 2px;scrollbar-width:thin;z-index:7}
 #hotbar .hot{flex:0 0 48px;width:48px;height:46px;font-size:10px;padding:3px}
